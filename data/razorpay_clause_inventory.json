@@ -1,0 +1,272 @@
+{
+  "metadata": {
+    "source_doc_version": "razorpay_terms_2026_01_01",
+    "source_url": "https://razorpay.com/terms/",
+    "effective_date": "2026-01-01",
+    "normalized_source_path": "data/razorpay_terms_normalized.json",
+    "purpose": "Structured clause inventory for compliance-style Q&A generation",
+    "created_for_plan_step": "Build a Clause Inventory"
+  },
+  "answerability_categories": [
+    "clear_answer",
+    "clarification_required",
+    "genuine_ambiguity"
+  ],
+  "topics": [
+    {
+      "topic_id": "fees_general",
+      "topic": "fees",
+      "source_clause_ids": ["clause-0077", "clause-0078", "clause-0079", "clause-0107", "clause-0188", "clause-0232"],
+      "clause_paths": [
+        "Part A: GENERAL TERMS AND CONDITIONS > FEES > 3.1",
+        "Part A: GENERAL TERMS AND CONDITIONS > FEES > 3.2",
+        "Part A: GENERAL TERMS AND CONDITIONS > FEES > 3.3",
+        "Part A: GENERAL TERMS AND CONDITIONS > ADDITIONAL TERMS > 14.3",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > PAYMENT PROCESSING > e",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > VALUE ADDED SERVICES"
+      ],
+      "legal_commercial_meaning": "Razorpay may levy, update, and invoice fees for services and value-added services; fees are exclusive of taxes, and fee credits can be used before deduction from transaction amounts.",
+      "legal_issue_tags": ["fees", "pricing", "invoicing", "tax"],
+      "product_tags": ["payment_aggregation", "value_added_services"],
+      "supports_answerability": ["clear_answer", "clarification_required", "genuine_ambiguity"],
+      "clear_answer_uses": ["Whether fees are exclusive of taxes", "Whether monthly invoices are available on the dashboard", "Whether fee credits may be consumed before deducting from settlements"],
+      "clarification_triggers": ["Which service or value-added service is being used", "Whether fee credits are available", "Whether the dispute is within the invoice notice period"],
+      "ambiguity_triggers": ["Exact fee amount, rate, or future pricing change is determined by Razorpay or separate pricing terms rather than the ToS text alone"]
+    },
+    {
+      "topic_id": "refunds_payment_aggregation",
+      "topic": "refunds",
+      "source_clause_ids": ["clause-0029", "clause-0199", "clause-0200", "clause-0201", "clause-0202", "clause-0203", "clause-0220", "clause-0228"],
+      "clause_paths": [
+        "Part A: GENERAL TERMS AND CONDITIONS > DEFINITIONS",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > REFUNDS",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > COMPLIANCE WITH PAYMENT AGGREGATOR GUIDELINES"
+      ],
+      "legal_commercial_meaning": "Refunds are merchant-initiated and subject to funds in the Escrow Account; they route back to the original payment method, Razorpay fees remain payable, and late-authorized uncaptured payments may be auto-refunded within five days.",
+      "legal_issue_tags": ["refunds", "fees", "customer_disputes"],
+      "product_tags": ["payment_aggregation"],
+      "supports_answerability": ["clear_answer", "clarification_required", "genuine_ambiguity"],
+      "clear_answer_uses": ["Whether a refund must go back to the same payment method", "Whether Razorpay fees remain payable after a refund", "Whether merchants must disclose refund and cancellation policies"],
+      "clarification_triggers": ["Whether funds are available in the Escrow Account", "Whether the payment was late-authorized but not captured", "Whether the merchant initiated the refund on the Platform"],
+      "ambiguity_triggers": ["The ToS does not provide complete operational SLAs for all refund rails or customer-facing policy terms"]
+    },
+    {
+      "topic_id": "chargebacks",
+      "topic": "chargebacks",
+      "source_clause_ids": ["clause-0011", "clause-0012", "clause-0013", "clause-0193", "clause-0194", "clause-0195", "clause-0196", "clause-0197", "clause-0198"],
+      "clause_paths": [
+        "Part A: GENERAL TERMS AND CONDITIONS > DEFINITIONS",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > CHARGEBACKS"
+      ],
+      "legal_commercial_meaning": "Chargeback liability rests with the merchant; Razorpay may deduct chargeback amounts on receipt of a claim, request supporting documents, recover shortfalls, and withhold post-termination settlement amounts for 120 days based on stipulated chargeback percentage.",
+      "legal_issue_tags": ["chargebacks", "disputes", "deductions", "termination"],
+      "product_tags": ["payment_aggregation", "emi"],
+      "supports_answerability": ["clear_answer", "clarification_required", "genuine_ambiguity"],
+      "clear_answer_uses": ["Whether the merchant is liable for domestic and international chargebacks", "How quickly chargeback documents must be furnished", "Whether Razorpay can issue a debit note for insufficient funds"],
+      "clarification_triggers": ["Whether the Facility Provider accepted the chargeback documents", "Whether the chargeback relates to an EMI loan cancellation", "Whether termination notice has been issued"],
+      "ambiguity_triggers": ["The Facility Provider's ultimate decision and any alternate document period may be outside the ToS"]
+    },
+    {
+      "topic_id": "fraudulent_transactions",
+      "topic": "fraud",
+      "source_clause_ids": ["clause-0036", "clause-0046", "clause-0068", "clause-0204", "clause-0205", "clause-0206", "clause-0207", "clause-0208", "clause-0223", "clause-0226"],
+      "clause_paths": [
+        "Part A: GENERAL TERMS AND CONDITIONS > USAGE OF THE SERVICES BY THE USER > 2.1",
+        "Part A: GENERAL TERMS AND CONDITIONS > USAGE OF THE SERVICES BY THE USER > 2.11",
+        "Part A: GENERAL TERMS AND CONDITIONS > USAGE OF THE SERVICES BY THE USER > 2.23",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > FRAUDULENT TRANSACTIONS",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > COMPLIANCE WITH PAYMENT AGGREGATOR GUIDELINES"
+      ],
+      "legal_commercial_meaning": "Razorpay can manage fraud risk, including blacklisting end users and suspending settlements during investigations of reported unauthorized debits; the merchant is responsible for fraudulent-transaction liability and regulatory complaint cooperation.",
+      "legal_issue_tags": ["fraud", "unauthorized_transactions", "risk_controls", "customer_consent"],
+      "product_tags": ["payment_aggregation"],
+      "supports_answerability": ["clear_answer", "clarification_required", "genuine_ambiguity"],
+      "clear_answer_uses": ["Whether Razorpay can suspend settlements during a fraudulent-transaction investigation", "Whether Razorpay disclaims liability for fraudulent transactions", "Whether complaint/query cooperation is required"],
+      "clarification_triggers": ["Whether a Facility Provider has intimated Razorpay", "Whether the disputed amount was already settled", "Whether the fraud resulted in a chargeback"],
+      "ambiguity_triggers": ["Post-settlement fraud disputes cross-reference RBI and NPCI notifications not fully reproduced in the ToS"]
+    },
+    {
+      "topic_id": "settlements_holds_and_deductions",
+      "topic": "settlements",
+      "source_clause_ids": ["clause-0018", "clause-0028", "clause-0070", "clause-0080", "clause-0178", "clause-0179", "clause-0181", "clause-0183", "clause-0186", "clause-0189", "clause-0191", "clause-0213", "clause-0225"],
+      "clause_paths": [
+        "Part A: GENERAL TERMS AND CONDITIONS > DEFINITIONS",
+        "Part A: GENERAL TERMS AND CONDITIONS > USAGE OF THE SERVICES BY THE USER > 2.25",
+        "Part A: GENERAL TERMS AND CONDITIONS > FEES > 3.4",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > PAYMENT PROCESSING",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > GENERAL",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > COMPLIANCE WITH PAYMENT AGGREGATOR GUIDELINES"
+      ],
+      "legal_commercial_meaning": "Settlement is net of permissible deductions and depends on funds reaching the Escrow Account plus risk/compliance checks; domestic and international timelines differ, and Razorpay or Facility Providers may hold, deduct, set off, or recover amounts in defined risk and liability scenarios.",
+      "legal_issue_tags": ["settlements", "settlement_holds", "deductions", "reconciliation", "facility_provider_rights"],
+      "product_tags": ["payment_aggregation"],
+      "supports_answerability": ["clear_answer", "clarification_required", "genuine_ambiguity"],
+      "clear_answer_uses": ["Whether domestic settlement timing is five days from escrow receipt", "Whether international or PA-CB inward timing is fifteen days from escrow receipt", "Whether Razorpay can deduct fees, chargebacks, fines, and penalties from settlement"],
+      "clarification_triggers": ["Transaction type: domestic, international or PA-CB inward, or PA-CB outward", "Whether funds have been received in the Escrow Account", "Whether risk/compliance checks or Facility Provider directions are pending"],
+      "ambiguity_triggers": ["Razorpay has discretion to withhold or refund certain escrow amounts where settlement is not feasible or suitable; the ToS does not state a universal maximum hold period"]
+    },
+    {
+      "topic_id": "prohibited_goods_and_services",
+      "topic": "prohibited goods",
+      "source_clause_ids": ["clause-0046", "clause-0053", "clause-0058", "clause-0113", "clause-0132", "clause-0140", "clause-0145", "clause-0167", "clause-0169", "clause-0177", "clause-0329"],
+      "clause_paths": [
+        "Part A: GENERAL TERMS AND CONDITIONS > USAGE OF THE SERVICES BY THE USER",
+        "Part A: GENERAL TERMS AND CONDITIONS > ADDITIONAL TERMS > 14.7",
+        "Part A: GENERAL TERMS AND CONDITIONS > SUSPENSION AND TERMINATION",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part IB: Specific Terms Applicable to PA-CB Outward Transactions > PAYMENT PROCESSING > 1.18"
+      ],
+      "legal_commercial_meaning": "Merchants may not use Razorpay for unlawful, fraudulent, forbidden, or policy-prohibited goods and services; listed examples include crypto products, unauthorized software, gambling, banned businesses, and categories updated by Razorpay based on Facility Provider instructions.",
+      "legal_issue_tags": ["prohibited_goods", "restricted_businesses", "card_network_rules", "compliance"],
+      "product_tags": ["payment_aggregation", "cross_border_outward"],
+      "supports_answerability": ["clear_answer", "clarification_required", "genuine_ambiguity"],
+      "clear_answer_uses": ["Whether crypto/NFT activity is prohibited", "Whether unauthorized software or gambling-related content is prohibited", "Whether sub-merchants must avoid the prohibited list"],
+      "clarification_triggers": ["Precise product or service category", "Whether the activity is by the merchant or a sub-merchant", "Whether Razorpay has approved the merchant business profile"],
+      "ambiguity_triggers": ["Borderline products may depend on Razorpay policies, Facility Provider updates, or applicable law beyond the static ToS text"]
+    },
+    {
+      "topic_id": "gaming_and_gambling",
+      "topic": "gaming",
+      "source_clause_ids": ["clause-0116", "clause-0140", "clause-0145", "clause-0167"],
+      "clause_paths": [
+        "Part A: GENERAL TERMS AND CONDITIONS > ADDITIONAL TERMS > 14.10",
+        "Part A: GENERAL TERMS AND CONDITIONS > SUSPENSION AND TERMINATION"
+      ],
+      "legal_commercial_meaning": "The ToS expressly bars real-money online gaming or online money game services as defined under the Promotion and Regulation of Online Gaming Act, 2025, and also lists gaming/gambling, sports bets, lotteries, sweepstakes, and games of chance as restricted or prohibited categories.",
+      "legal_issue_tags": ["gaming", "gambling", "prohibited_goods", "external_regulation"],
+      "product_tags": ["payment_aggregation"],
+      "supports_answerability": ["clear_answer", "clarification_required", "genuine_ambiguity"],
+      "clear_answer_uses": ["Whether real-money online gaming payments are allowed", "Whether sports betting, lotteries, or gambling-site memberships are allowed"],
+      "clarification_triggers": ["Whether the product involves real money, prize value, betting, chance, or gambling-like mechanics"],
+      "ambiguity_triggers": ["Classification of a game may depend on facts and external gaming law definitions not fully reproduced in the ToS"]
+    },
+    {
+      "topic_id": "marketplace_and_sub_merchants",
+      "topic": "marketplace/sub-merchants",
+      "source_clause_ids": ["clause-0032", "clause-0067", "clause-0106", "clause-0307", "clause-0322", "clause-0323", "clause-0324", "clause-0325", "clause-0326", "clause-0328", "clause-0329", "clause-0330", "clause-0331", "clause-0332"],
+      "clause_paths": [
+        "Part A: GENERAL TERMS AND CONDITIONS > DEFINITIONS",
+        "Part A: GENERAL TERMS AND CONDITIONS > USAGE OF THE SERVICES BY THE USER > 2.22",
+        "Part A: GENERAL TERMS AND CONDITIONS > ADDITIONAL TERMS > 14.2",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part IB: Specific Terms Applicable to PA-CB Outward Transactions > PAYMENT PROCESSING"
+      ],
+      "legal_commercial_meaning": "Marketplace merchants must accept payments only for onboarded sellers contractually tied to them; cross-border outward payment aggregators/e-commerce marketplaces can be onboarded as master merchants for sub-merchants, but must maintain permits, evidence authorization, conduct due diligence, enforce prohibited-list and service-term compliance, and indemnify Razorpay for sub-merchant acts.",
+      "legal_issue_tags": ["marketplace", "sub_merchants", "third_party_settlement", "due_diligence", "indemnity", "tax"],
+      "product_tags": ["payment_aggregation", "cross_border_outward"],
+      "supports_answerability": ["clear_answer", "clarification_required", "genuine_ambiguity"],
+      "clear_answer_uses": ["Whether marketplace sellers must be onboarded and contractually obligated", "Whether cross-border marketplace merchants are responsible for sub-merchant acts", "Whether sub-merchants must avoid prohibited goods/services"],
+      "clarification_triggers": ["Whether the merchant is domestic or outside India", "Whether payments are accepted on behalf of sellers/clients/customers", "Whether third-party settlement is requested"],
+      "ambiguity_triggers": ["Required licenses, permits, seller due diligence scope, and cross-border marketplace obligations depend on jurisdiction and applicable law"]
+    },
+    {
+      "topic_id": "kyc_onboarding_monitoring",
+      "topic": "KYC and onboarding",
+      "source_clause_ids": ["clause-0022", "clause-0037", "clause-0041", "clause-0042", "clause-0043", "clause-0218", "clause-0219"],
+      "clause_paths": [
+        "Part A: GENERAL TERMS AND CONDITIONS > DEFINITIONS",
+        "Part A: GENERAL TERMS AND CONDITIONS > USAGE OF THE SERVICES BY THE USER",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > COMPLIANCE WITH PAYMENT AGGREGATOR GUIDELINES"
+      ],
+      "legal_commercial_meaning": "Merchants must provide accurate KYC and business information; Razorpay may conduct due diligence, retrieve CKYCR records, demand extra KYC/customer/invoice documents, monitor transactions, and suspend services or stop settlement until documents satisfy Razorpay.",
+      "legal_issue_tags": ["kyc", "onboarding", "customer_due_diligence", "settlement_holds"],
+      "product_tags": ["payment_aggregation"],
+      "supports_answerability": ["clear_answer", "clarification_required", "genuine_ambiguity"],
+      "clear_answer_uses": ["Whether Razorpay can ask for additional KYC documents", "Whether inaccurate information can lead to suspension or termination", "Whether Razorpay can retrieve CKYCR documents"],
+      "clarification_triggers": ["Whether the requested documents are merchant KYC, customer KYC, or invoices", "Whether the merchant failed to submit documents", "Whether a governmental authority or Facility Provider requested documents"],
+      "ambiguity_triggers": ["Exact KYC document set and satisfaction threshold are discretionary or set by external KYC rules"]
+    },
+    {
+      "topic_id": "tax_and_invoicing",
+      "topic": "tax",
+      "source_clause_ids": ["clause-0078", "clause-0081", "clause-0082", "clause-0083", "clause-0084", "clause-0259", "clause-0275", "clause-0313", "clause-0314", "clause-0317", "clause-0319", "clause-0332", "clause-0336", "clause-0340"],
+      "clause_paths": [
+        "Part A: GENERAL TERMS AND CONDITIONS > FEES",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > SPECIFIC TERMS FOR SNRR MERCHANTS",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part IA: Additional Terms For Offline Payment Aggregation And Device Term",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part IB: Specific Terms Applicable to PA-CB Outward Transactions > PAYMENT PROCESSING"
+      ],
+      "legal_commercial_meaning": "Fees exclude taxes; merchants bear statutory tax changes, GSTIN accuracy, TDS and e-commerce operator obligations, SNRR Indian tax exposure, cross-border withholding documentation, overseas tax compliance, OIDAR GST assessment, and LRS/TCS declaration duties.",
+      "legal_issue_tags": ["tax", "gst", "tds", "tcs", "withholding", "oidar", "snrr"],
+      "product_tags": ["payment_aggregation", "offline_payment_aggregation", "cross_border_outward"],
+      "supports_answerability": ["clear_answer", "clarification_required", "genuine_ambiguity"],
+      "clear_answer_uses": ["Whether fees are tax-exclusive", "Who must keep GSTIN details accurate", "Whether Razorpay is obligated to deduct Section 194O TDS for marketplace operators"],
+      "clarification_triggers": ["Whether the merchant is an e-commerce operator", "Whether cross-border settlement documents such as No-PE declarations were furnished", "Whether LRS/TCS applies"],
+      "ambiguity_triggers": ["Actual tax treatment depends on current tax law, merchant facts, certificates, and jurisdiction-specific tax advice"]
+    },
+    {
+      "topic_id": "data_protection_and_tokenization",
+      "topic": "data",
+      "source_clause_ids": ["clause-0035", "clause-0060", "clause-0072", "clause-0085", "clause-0096", "clause-0097", "clause-0098", "clause-0099", "clause-0214", "clause-0215", "clause-0217", "clause-0221", "clause-0226", "clause-0399", "clause-0400", "clause-0401", "clause-0406"],
+      "clause_paths": [
+        "Part A: GENERAL TERMS AND CONDITIONS > PROPRIETARY RIGHTS > 1.2",
+        "Part A: GENERAL TERMS AND CONDITIONS > USAGE OF THE SERVICES BY THE USER",
+        "Part A: GENERAL TERMS AND CONDITIONS > PRIVACY POLICY > 4.1",
+        "Part A: GENERAL TERMS AND CONDITIONS > . DATA PROTECTION",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > COMPLIANCE WITH PAYMENT AGGREGATOR GUIDELINES",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part IV: Specific Terms For Subscription Services"
+      ],
+      "legal_commercial_meaning": "Merchants must obtain and maintain customer consents, remain responsible for Customer Data, notify Razorpay of suspected security breaches within 24 hours, avoid storing sensitive card credentials or payment-instrument data, maintain PCI/PADSS compliance where applicable, and provide explicit consent flows for card tokenization and e-mandates.",
+      "legal_issue_tags": ["data_protection", "privacy", "customer_consent", "breach_notice", "pci_dss", "tokenization", "payment_instrument_data"],
+      "product_tags": ["payment_aggregation", "subscriptions", "tokenization"],
+      "supports_answerability": ["clear_answer", "clarification_required", "genuine_ambiguity"],
+      "clear_answer_uses": ["Whether merchants can store full card credentials", "Whether suspected Customer Data breaches must be notified within 24 hours", "Whether explicit consent is required for subscription card tokenization"],
+      "clarification_triggers": ["Whether the integration is custom checkout or server-to-server", "Whether the data is Customer Data, Usage Data, or payment-instrument credentials", "Whether PCI DSS or PA-DSS is applicable"],
+      "ambiguity_triggers": ["The Privacy Policy and applicable data protection laws are incorporated by reference and may add obligations not fully stated in the ToS"]
+    },
+    {
+      "topic_id": "suspension_and_termination",
+      "topic": "suspension",
+      "source_clause_ids": ["clause-0037", "clause-0043", "clause-0046", "clause-0119", "clause-0122", "clause-0124", "clause-0125", "clause-0130", "clause-0131", "clause-0196", "clause-0211", "clause-0339"],
+      "clause_paths": [
+        "Part A: GENERAL TERMS AND CONDITIONS > USAGE OF THE SERVICES BY THE USER",
+        "Part A: GENERAL TERMS AND CONDITIONS > SUSPENSION AND TERMINATION",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > CHARGEBACKS",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > GENERAL",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part IB: Specific Terms Applicable to PA-CB Outward Transactions > PAYMENT PROCESSING > 1.19"
+      ],
+      "legal_commercial_meaning": "Razorpay may immediately suspend services and settlement for inaccurate information, missing KYC, prohibited or unlawful use, Facility Provider or authority instructions, suspicious activity, excessive disputes/refunds/reversals, and LRS breaches; termination does not release accrued obligations.",
+      "legal_issue_tags": ["suspension", "termination", "settlement_holds", "kyc", "fraud", "lrs"],
+      "product_tags": ["payment_aggregation", "cross_border_outward"],
+      "supports_answerability": ["clear_answer", "clarification_required", "genuine_ambiguity"],
+      "clear_answer_uses": ["Whether Razorpay can suspend services and settlement without liability in listed events", "Whether termination ends accrued obligations", "Whether chargeback and fraudulent-transaction clauses survive termination"],
+      "clarification_triggers": ["Which suspension trigger applies", "Whether termination notice has been issued", "Whether an offline agreement overrides the default termination-at-will language"],
+      "ambiguity_triggers": ["Several triggers depend on Razorpay opinion or external instructions, and the ToS does not define a universal maximum suspension or settlement-hold duration"]
+    },
+    {
+      "topic_id": "cross_border_outward",
+      "topic": "cross-border",
+      "source_clause_ids": ["clause-0002", "clause-0025", "clause-0307", "clause-0308", "clause-0311", "clause-0312", "clause-0313", "clause-0314", "clause-0315", "clause-0316", "clause-0317", "clause-0318", "clause-0335", "clause-0336", "clause-0337", "clause-0338", "clause-0339", "clause-0340"],
+      "clause_paths": [
+        "Part A: GENERAL TERMS AND CONDITIONS",
+        "Part A: GENERAL TERMS AND CONDITIONS > DEFINITIONS",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part IB: Specific Terms Applicable to PA-CB Outward Transactions > PAYMENT PROCESSING"
+      ],
+      "legal_commercial_meaning": "For merchants based outside India collecting from Indian customers, Part IB adds specialized operational, regulatory, tax, LRS, and settlement rules that prevail over conflicting general terms; settlement/remittance depends on escrow receipt, risk checks, documentation, tax withholding, currency conversion, and compliance with FEMA/RBI/LRS requirements.",
+      "legal_issue_tags": ["cross_border", "pa_cb_outward", "settlements", "withholding_tax", "currency_conversion", "fema", "lrs", "indemnity"],
+      "product_tags": ["cross_border_outward", "payment_aggregation"],
+      "supports_answerability": ["clear_answer", "clarification_required", "genuine_ambiguity"],
+      "clear_answer_uses": ["Whether Part IB applies to outside-India merchants collecting from Indian customers", "Whether no settlement is made until escrow is credited", "Whether Razorpay may suspend LRS-related transactions for suspected breaches"],
+      "clarification_triggers": ["Whether the merchant is based outside India", "Whether the transaction is PA-CB outward, PA-CB inward, domestic, or international", "Whether required tax, transaction, LRS, or customer due-diligence documents were provided"],
+      "ambiguity_triggers": ["Final remittance timing, LRS compliance, FEMA obligations, and tax treatment depend on external banking, RBI, and tax-law processes"]
+    },
+    {
+      "topic_id": "product_specific_terms",
+      "topic": "product-specific terms",
+      "source_clause_ids": ["clause-0004", "clause-0005", "clause-0209", "clause-0265", "clause-0301", "clause-0352", "clause-0353", "clause-0359", "clause-0361", "clause-0364", "clause-0399", "clause-0406", "clause-0427"],
+      "clause_paths": [
+        "Part A: GENERAL TERMS AND CONDITIONS",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part I: Specific Terms For Payment Aggregation Services > GENERAL",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part IA: Additional Terms For Offline Payment Aggregation And Device Term",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part II: Specific Terms For E-Mandate Services",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part IV: Specific Terms For Subscription Services",
+        "Part B: SPECIFIC TERMS AND CONDITIONS > Part VI: Magic Checkout"
+      ],
+      "legal_commercial_meaning": "Specific service terms and accepted supplemental terms can override or supplement general terms; offline devices, e-mandates, subscriptions, and Magic Checkout each add service-specific onboarding, fees, settlement, withholding, fraud, tokenization, and conflict rules.",
+      "legal_issue_tags": ["product_specific_terms", "offline_devices", "e_mandate", "subscriptions", "magic_checkout", "conflict_of_terms"],
+      "product_tags": ["offline_payment_aggregation", "pos", "e_mandate", "subscriptions", "magic_checkout"],
+      "supports_answerability": ["clear_answer", "clarification_required", "genuine_ambiguity"],
+      "clear_answer_uses": ["Whether specific terms prevail over conflicting general terms", "Whether e-mandate onboarding depends on Sponsor Bank registration", "Whether offline device fees are governed by pricing terms agreed at subscription"],
+      "clarification_triggers": ["Which product or service is being used", "Whether the merchant accepted supplemental terms", "Whether Razorpay is acting only as a technical service provider for tokenization"],
+      "ambiguity_triggers": ["Some operational details are in product pricing terms, supplemental forms, bank procedures, or NPCI guidelines outside the ToS"]
+    }
+  ]
+}
