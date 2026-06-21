@@ -13,9 +13,9 @@ import hashlib
 import html
 import json
 import re
-import sys
 import unicodedata
-from dataclasses import dataclass, field
+import sys
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
@@ -522,9 +522,11 @@ def write_json(payload: dict[str, object], output_path: Path) -> None:
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Scrape and normalize the Razorpay Payments Terms page."
+        description=(
+            "Scrape and normalize the Razorpay Payments Terms page at "
+            f"{DEFAULT_SOURCE_URL}."
+        )
     )
-    parser.add_argument("--source-url", default=DEFAULT_SOURCE_URL, help="Razorpay terms URL.")
     parser.add_argument(
         "--output",
         default=str(DEFAULT_OUTPUT_PATH),
@@ -551,10 +553,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.input_html:
         raw_html = Path(args.input_html).read_text(encoding="utf-8")
     else:
-        raw_html = fetch_html(args.source_url, args.timeout)
+        raw_html = fetch_html(DEFAULT_SOURCE_URL, args.timeout)
 
     payload = normalize_terms(
-        source_url=args.source_url,
+        source_url=DEFAULT_SOURCE_URL,
         raw_html=raw_html,
         fetched_at_utc=fetched_at_utc,
     )
