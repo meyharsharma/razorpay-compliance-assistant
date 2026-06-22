@@ -392,6 +392,9 @@ def build_citations(
                 "clause_path": clause["clause_path_text"],
                 "clause_label": clause_label(clause),
                 "evidence_summary": compact(clause.get("text_without_marker") or clause.get("text") or ""),
+                "source_clause_text": " ".join(
+                    (clause.get("text_without_marker") or clause.get("text") or "").split()
+                ),
             }
         )
     return citations

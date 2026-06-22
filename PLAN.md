@@ -92,7 +92,8 @@ Each JSONL row will use the following schema.
       "section": "section name",
       "clause_path": "hierarchical path to the cited rule",
       "clause_label": "human-readable clause label",
-      "evidence_summary": "short summary of what the cited clause says"
+      "evidence_summary": "short summary of what the cited clause says",
+      "source_clause_text": "full normalized cited clause text"
     }
   ],
   "legal_issue_tags": ["refunds", "fees"],
@@ -133,6 +134,7 @@ Each JSONL row will use the following schema.
 - `ambiguity_reason`: Required for category C. Examples include `tos_silent`, `undefined_term`, `external_regulation`, `razorpay_discretion`, and `jurisdiction_dependent`.
 - `recommended_next_step`: Especially important for category C. Examples include asking Razorpay support, legal review, checking RBI/NPCI rules, or confirming whether an offline agreement applies.
 - `citations`: Array because some answers depend on more than one clause.
+- `citations[].source_clause_text`: Full normalized clause text for judge review. Without this, citation scoring can only assess plausibility, not true support.
 - `legal_issue_tags`: Compliance or legal issue labels, such as refunds, chargebacks, settlements, fraud, prohibited goods, gaming, marketplace/sub-merchants, data protection, KYC, tax, cross-border, and termination.
 - `product_tags`: Razorpay product or service labels, such as payment aggregation, POS, subscriptions, TokenHQ, Magic Checkout, cross-border outward, and e-mandate.
 - `merchant_context_assumed`: Facts baked into the example. This makes the training example auditable.
@@ -334,7 +336,9 @@ The judge prompt should include:
 - Assignment category definitions
 - The scoring rubric
 - The full dataset row
-- The cited evidence summaries and, where available, source clause text
+- The cited evidence summaries and `source_clause_text`
+
+Prompts are built deterministically by `scripts/evaluate_dataset.py`. The prompt payload includes `prompt_version`, category definitions, the scoring rubric, allowed critical failure IDs, a strict JSON output example, the full dataset row, and a dedicated `cited_clause_evidence` list containing citation fields, `evidence_summary`, and `source_clause_text`.
 
 The judge should return strict JSON for each example:
 

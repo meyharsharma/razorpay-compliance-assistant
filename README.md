@@ -24,6 +24,7 @@ The current generated dataset contains 45 examples: 15 per category.
 `-- scripts/
     |-- generate_dataset.py
     |-- ingest_terms.py
+    |-- evaluate_dataset.py
     |-- validate_answerability_rules.py
     |-- validate_clause_inventory.py
     `-- validate_dataset.py
@@ -132,6 +133,24 @@ Validate the answerability rules:
 python3 -B scripts/validate_answerability_rules.py
 ```
 
+Build judge prompts without calling a model:
+
+```bash
+python3 -B scripts/evaluate_dataset.py
+```
+
+Write prompt records to `eval/judge_prompts.jsonl`:
+
+```bash
+python3 -B scripts/evaluate_dataset.py --write-prompts
+```
+
+Inspect a single prompt:
+
+```bash
+python3 -B scripts/evaluate_dataset.py --print-prompt-id rq-clear-answer-001
+```
+
 Current validation results:
 
 ```text
@@ -161,7 +180,11 @@ Rules defining the three answerability categories and the dataset fields each ca
 
 `data/synthetic_qa.jsonl`
 
-Generated Q&A dataset. Each line is one JSON object with the question, ideal assistant response, category label, citation objects, tags, missing facts or ambiguity details, scoring-dimension placeholders, pass/fail fields, and generation metadata.
+Generated Q&A dataset. Each line is one JSON object with the question, ideal assistant response, category label, citation objects, tags, missing facts or ambiguity details, scoring-dimension placeholders, pass/fail fields, and generation metadata. Each citation includes both `evidence_summary` and `source_clause_text` so a judge can evaluate citation support against clause text rather than plausibility alone.
+
+`eval/judge_prompts.jsonl`
+
+Optional prompt artifact produced by `scripts/evaluate_dataset.py --write-prompts`. Each line contains a row id, prompt version, and the full prompt payload for one judge evaluation.
 
 ## Scoring Dimensions
 
@@ -207,7 +230,7 @@ The current generator is deterministic because it uses fixed templates, fixed ca
 With the current checked-in inputs and default arguments, `data/synthetic_qa.jsonl` has SHA-256:
 
 ```text
-5c8de088db8f777862513f899493b30e2adc918c4412422d13fc9c6c9c6e0a77
+a30673fe6dd7cc9e2adb90482d1dc44c7c9fe054a77c954ec81cf9f4a7572dc2
 ```
 
 Changing `--seed` currently changes the recorded metadata seed, but it does not randomize row content because the generator's selection logic is template and sequence based. The seed is reserved for future randomization or paraphrasing steps.

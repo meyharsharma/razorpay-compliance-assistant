@@ -70,6 +70,7 @@ REQUIRED_CITATION_FIELDS = {
     "clause_path",
     "clause_label",
     "evidence_summary",
+    "source_clause_text",
 }
 
 
