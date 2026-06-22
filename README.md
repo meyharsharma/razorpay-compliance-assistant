@@ -157,6 +157,12 @@ Run the LLM judge and write detailed per-row results to `eval/judge_results.json
 OPENAI_API_KEY=... python3 -B scripts/evaluate_dataset.py --run-judge --model gpt-4.1-mini
 ```
 
+Run the judge through OpenRouter with `openai/gpt-oss-120b:free`:
+
+```bash
+OPENROUTER_API_KEY=... python3 -B scripts/evaluate_dataset.py --run-judge --provider openrouter
+```
+
 The evaluator retries malformed judge output once by default. Change that with `--max-retries`, or use `--mock-judge` for local plumbing checks without calling a model:
 
 ```bash

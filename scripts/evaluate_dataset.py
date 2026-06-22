@@ -20,8 +20,10 @@ from validate_dataset import CRITICAL_FAILURES, SCORING_DIMENSIONS, load_jsonl, 
 DEFAULT_DATASET_PATH = Path("data/synthetic_qa.jsonl")
 DEFAULT_PROMPTS_PATH = Path("eval/judge_prompts.jsonl")
 DEFAULT_RESULTS_PATH = Path("eval/judge_results.jsonl")
-DEFAULT_MODEL = "gpt-4.1-mini"
+DEFAULT_OPENAI_MODEL = "gpt-4.1-mini"
+DEFAULT_OPENROUTER_MODEL = "openai/gpt-oss-120b:free"
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
+OPENROUTER_CHAT_COMPLETIONS_URL = "https://openrouter.ai/api/v1/chat/completions"
 PROMPT_VERSION = "judge_rubric_v1"
 
 CATEGORY_DEFINITIONS = {
@@ -178,6 +180,20 @@ def extract_response_text(response_payload: dict[str, Any]) -> str:
     return "".join(parts).strip()
 
 
+def extract_chat_completion_text(response_payload: dict[str, Any]) -> str:
+    choices = response_payload.get("choices")
+    if not isinstance(choices, list) or not choices:
+        return ""
+    first_choice = choices[0]
+    if not isinstance(first_choice, dict):
+        return ""
+    message = first_choice.get("message")
+    if not isinstance(message, dict):
+        return ""
+    content = message.get("content")
+    return content.strip() if isinstance(content, str) else ""
+
+
 def call_openai_judge(prompt: str, model: str, timeout: int) -> str:
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
@@ -220,6 +236,59 @@ def call_openai_judge(prompt: str, model: str, timeout: int) -> str:
     if not text:
         raise RuntimeError("OpenAI API response did not contain output text")
     return text
+
+
+def call_openrouter_judge(prompt: str, model: str, timeout: int) -> str:
+    api_key = os.environ.get("OPENROUTER_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENROUTER_API_KEY is required unless --mock-judge is used")
+
+    payload = {
+        "model": model,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You are a strict dataset quality judge. Return only valid JSON matching the "
+                    "requested schema."
+                ),
+            },
+            {"role": "user", "content": prompt},
+        ],
+        "temperature": 0,
+    }
+    request = urllib.request.Request(
+        OPENROUTER_CHAT_COMPLETIONS_URL,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "X-Title": "Razorpay ToS dataset evaluator",
+        },
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            response_payload = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"OpenRouter API HTTP {exc.code}: {detail}") from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"OpenRouter API request failed: {exc.reason}") from exc
+
+    text = extract_chat_completion_text(response_payload)
+    if not text:
+        raise RuntimeError("OpenRouter API response did not contain message content")
+    return text
+
+
+def call_judge(prompt: str, provider: str, model: str, timeout: int) -> str:
+    if provider == "openai":
+        return call_openai_judge(prompt, model, timeout)
+    if provider == "openrouter":
+        return call_openrouter_judge(prompt, model, timeout)
+    raise ValueError(f"unsupported provider: {provider}")
 
 
 def mock_judge_response(row: dict[str, Any]) -> str:
@@ -337,6 +406,7 @@ def validate_judge_output(result: dict[str, Any], row: dict[str, Any]) -> list[s
 
 def evaluate_row(
     row: dict[str, Any],
+    provider: str,
     model: str,
     max_retries: int,
     timeout: int,
@@ -348,7 +418,7 @@ def evaluate_row(
     for attempt in range(1, max_retries + 2):
         started = time.time()
         try:
-            raw_response = mock_judge_response(row) if mock_judge else call_openai_judge(prompt, model, timeout)
+            raw_response = mock_judge_response(row) if mock_judge else call_judge(prompt, provider, model, timeout)
             parsed, parse_error = parse_strict_json(raw_response)
             validation_errors = validate_judge_output(parsed, row) if parsed is not None else [parse_error]
             elapsed_ms = round((time.time() - started) * 1000)
@@ -365,6 +435,7 @@ def evaluate_row(
                     "id": row["id"],
                     "status": "valid",
                     "prompt_version": PROMPT_VERSION,
+                    "provider": "mock" if mock_judge else provider,
                     "model_id": "mock-judge" if mock_judge else model,
                     "attempts": attempt,
                     "judge_response": parsed,
@@ -385,6 +456,7 @@ def evaluate_row(
         "id": row["id"],
         "status": "invalid",
         "prompt_version": PROMPT_VERSION,
+        "provider": "mock" if mock_judge else provider,
         "model_id": "mock-judge" if mock_judge else model,
         "attempts": len(attempts),
         "judge_response": None,
@@ -396,6 +468,7 @@ def evaluate_row(
 def evaluate_rows(
     rows: list[dict[str, Any]],
     dataset_path: Path,
+    provider: str,
     model: str,
     max_retries: int,
     timeout: int,
@@ -406,10 +479,11 @@ def evaluate_rows(
     run_started = datetime.now(timezone.utc).isoformat()
     records: list[dict[str, Any]] = []
     for row in selected_rows:
-        result = evaluate_row(row, model, max_retries, timeout, mock_judge)
+        result = evaluate_row(row, provider, model, max_retries, timeout, mock_judge)
         result["run_metadata"] = {
             "run_started_at": run_started,
             "input_file": str(dataset_path),
+            "provider": "mock" if mock_judge else provider,
             "temperature": 0,
             "max_retries": max_retries,
         }
@@ -426,11 +500,15 @@ def main() -> int:
     parser.add_argument("--write-prompts", action="store_true")
     parser.add_argument("--run-judge", action="store_true")
     parser.add_argument("--mock-judge", action="store_true")
-    parser.add_argument("--model", default=DEFAULT_MODEL)
+    parser.add_argument("--provider", choices=("openai", "openrouter"), default="openai")
+    parser.add_argument("--model")
     parser.add_argument("--max-retries", type=int, default=1)
     parser.add_argument("--timeout", type=int, default=120)
     parser.add_argument("--limit", type=int)
     args = parser.parse_args()
+    model = args.model or (
+        DEFAULT_OPENROUTER_MODEL if args.provider == "openrouter" else DEFAULT_OPENAI_MODEL
+    )
 
     rows, errors = load_jsonl(args.dataset)
     errors.extend(validate_rows(rows))
@@ -457,7 +535,8 @@ def main() -> int:
         results = evaluate_rows(
             rows=rows,
             dataset_path=args.dataset,
-            model=args.model,
+            provider=args.provider,
+            model=model,
             max_retries=args.max_retries,
             timeout=args.timeout,
             mock_judge=args.mock_judge,
