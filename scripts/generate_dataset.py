@@ -606,6 +606,9 @@ def make_base_row(
         "missing_facts": [],
         "confidence": "high" if category == "clear_answer" else "medium",
         "scoring_dimensions": scoring_dimensions,
+        "overall_score": None,
+        "passed": None,
+        "critical_failures": [],
         "generation_metadata": {
             "source_doc_version": SOURCE_DOC_VERSION,
             "script_seed": seed,

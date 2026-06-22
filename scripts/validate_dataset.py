@@ -22,6 +22,13 @@ SCORING_DIMENSIONS = {
     "ambiguity_handling",
     "schema_consistency",
 }
+CRITICAL_FAILURES = {
+    "wrong_category",
+    "citation_does_not_support_answer",
+    "assistant_gives_definitive_answer_for_genuine_ambiguity",
+    "clarification_required_but_no_specific_question",
+    "clear_answer_but_response_refuses_or_over_hedges",
+}
 MIN_TOTAL = 45
 MIN_PER_CATEGORY = 15
 GENERIC_CLARIFICATION_PHRASES = {
@@ -49,6 +56,9 @@ REQUIRED_FIELDS = {
     "missing_facts",
     "confidence",
     "scoring_dimensions",
+    "overall_score",
+    "passed",
+    "critical_failures",
     "generation_metadata",
 }
 
@@ -182,6 +192,66 @@ def validate_scoring_dimensions(row: dict[str, Any], prefix: str, errors: list[s
             errors.append(f"{prefix}.scoring_dimensions.{dimension} must be applicable for {category}")
 
 
+def applicable_scores(row: dict[str, Any]) -> list[int] | None:
+    scoring_dimensions = row.get("scoring_dimensions")
+    if not isinstance(scoring_dimensions, dict):
+        return None
+
+    scores: list[int] = []
+    for value in scoring_dimensions.values():
+        if value == "not_applicable":
+            continue
+        if value is None:
+            return None
+        if not isinstance(value, int) or isinstance(value, bool) or not 1 <= value <= 5:
+            return None
+        scores.append(value)
+    return scores
+
+
+def expected_overall_score(scores: list[int]) -> float:
+    return round(sum(scores) / len(scores), 2)
+
+
+def validate_pass_fail_fields(row: dict[str, Any], prefix: str, errors: list[str]) -> None:
+    failures = row.get("critical_failures")
+    if not isinstance(failures, list):
+        errors.append(f"{prefix}.critical_failures must be an array")
+        return
+
+    for index, failure in enumerate(failures):
+        if failure not in CRITICAL_FAILURES:
+            errors.append(
+                f"{prefix}.critical_failures[{index}] must be one of {sorted(CRITICAL_FAILURES)}"
+            )
+
+    scores = applicable_scores(row)
+    if scores is None:
+        if row.get("overall_score") is not None:
+            errors.append(f"{prefix}.overall_score must be null until all applicable dimensions are scored")
+        if row.get("passed") is not None:
+            errors.append(f"{prefix}.passed must be null until all applicable dimensions are scored")
+        return
+
+    if not scores:
+        errors.append(f"{prefix}.scoring_dimensions must include at least one applicable score")
+        return
+
+    expected_score = expected_overall_score(scores)
+    actual_score = row.get("overall_score")
+    if not isinstance(actual_score, (int, float)) or isinstance(actual_score, bool):
+        errors.append(f"{prefix}.overall_score must be a number when dimensions are scored")
+    elif round(float(actual_score), 2) != expected_score:
+        errors.append(f"{prefix}.overall_score must equal {expected_score}")
+
+    expected_passed = expected_score >= 4.0 and not failures
+    if row.get("passed") is not expected_passed:
+        errors.append(
+            f"{prefix}.passed must be {expected_passed} when overall_score is {expected_score} "
+            "and critical_failures are applied"
+        )
+
+
 def validate_rows(rows: list[dict[str, Any]]) -> list[str]:
     errors: list[str] = []
     if len(rows) < MIN_TOTAL:
@@ -225,6 +295,7 @@ def validate_rows(rows: list[dict[str, Any]]) -> list[str]:
             require_list(row, field, prefix, errors)
         validate_citations(row, prefix, errors)
         validate_scoring_dimensions(row, prefix, errors)
+        validate_pass_fail_fields(row, prefix, errors)
 
         if category == "clear_answer":
             if row.get("needs_clarification") is not False:

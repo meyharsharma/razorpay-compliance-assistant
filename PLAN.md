@@ -108,6 +108,9 @@ Each JSONL row will use the following schema.
     "ambiguity_handling": "not_applicable",
     "schema_consistency": null
   },
+  "overall_score": null,
+  "passed": null,
+  "critical_failures": [],
   "generation_metadata": {
     "source_doc_version": "razorpay_terms_2026_01_01",
     "script_seed": 42,
@@ -136,6 +139,9 @@ Each JSONL row will use the following schema.
 - `missing_facts`: Facts needed before the assistant can answer confidently. This is especially important for category B.
 - `confidence`: High, medium, or low, based on how strongly the ToS supports the response.
 - `scoring_dimensions`: Evaluation placeholders for the 6-dimension judge rubric. Applicable dimensions are `null` until scored; category-specific dimensions that do not apply are marked `not_applicable`.
+- `overall_score`: Average of applicable integer dimension scores, rounded to 2 decimal places. It remains `null` until all applicable dimensions are scored.
+- `passed`: `true` only when `overall_score >= 4.0` and `critical_failures` is empty. It remains `null` until all applicable dimensions are scored.
+- `critical_failures`: Evaluation failure IDs that override the average score.
 - `generation_metadata`: Pipeline traceability, including source version, seed, determinism, template ID, and model ID if an LLM is used.
 
 ## Important Source-Document Considerations
@@ -307,11 +313,13 @@ Critical failures should override the average score.
 
 Examples of critical failures:
 
-- Wrong category
-- Citation does not support the answer
-- Category C response gives a definitive answer despite genuine ambiguity
-- Category B response lacks a targeted clarifying question
-- Category A response refuses, over-hedges, or asks unnecessary clarifying questions
+- `wrong_category`
+- `citation_does_not_support_answer`
+- `assistant_gives_definitive_answer_for_genuine_ambiguity`
+- `clarification_required_but_no_specific_question`
+- `clear_answer_but_response_refuses_or_over_hedges`
+
+This matters because a row with decent writing but the wrong category is bad training data.
 
 Dataset-level quality targets:
 

@@ -161,7 +161,7 @@ Rules defining the three answerability categories and the dataset fields each ca
 
 `data/synthetic_qa.jsonl`
 
-Generated Q&A dataset. Each line is one JSON object with the question, ideal assistant response, category label, citation objects, tags, missing facts or ambiguity details, scoring-dimension placeholders, and generation metadata.
+Generated Q&A dataset. Each line is one JSON object with the question, ideal assistant response, category label, citation objects, tags, missing facts or ambiguity details, scoring-dimension placeholders, pass/fail fields, and generation metadata.
 
 ## Scoring Dimensions
 
@@ -175,6 +175,12 @@ Each row includes a `scoring_dimensions` object for evaluation:
 - `schema_consistency`
 
 Scores use a 1-5 scale where 1 is poor, 3 is acceptable but flawed, and 5 is excellent. Applicable dimensions are `null` until scored. `clarification_quality` is `not_applicable` for non-`clarification_required` rows, and `ambiguity_handling` is `not_applicable` for non-`genuine_ambiguity` rows.
+
+When scored, each row derives:
+
+- `overall_score`: the average of applicable integer dimension scores, rounded to 2 decimal places.
+- `passed`: `true` only when `overall_score >= 4.0` and `critical_failures` is empty.
+- `critical_failures`: failure IDs that override the average score, including `wrong_category`, `citation_does_not_support_answer`, `assistant_gives_definitive_answer_for_genuine_ambiguity`, `clarification_required_but_no_specific_question`, and `clear_answer_but_response_refuses_or_over_hedges`.
 
 ## Seeds And Determinism
 
@@ -201,7 +207,7 @@ The current generator is deterministic because it uses fixed templates, fixed ca
 With the current checked-in inputs and default arguments, `data/synthetic_qa.jsonl` has SHA-256:
 
 ```text
-923b9bd758e5466ce91c9c5b063d422e00805705f3fd0666c834fd83f0640e8c
+5c8de088db8f777862513f899493b30e2adc918c4412422d13fc9c6c9c6e0a77
 ```
 
 Changing `--seed` currently changes the recorded metadata seed, but it does not randomize row content because the generator's selection logic is template and sequence based. The seed is reserved for future randomization or paraphrasing steps.
