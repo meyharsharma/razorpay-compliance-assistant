@@ -22,6 +22,14 @@ SOURCE_DOC_VERSION = "razorpay_terms_2026_01_01"
 
 CATEGORIES = ("clear_answer", "clarification_required", "genuine_ambiguity")
 PER_CATEGORY = 15
+SCORING_DIMENSIONS = (
+    "category_correctness",
+    "citation_support",
+    "response_quality",
+    "clarification_quality",
+    "ambiguity_handling",
+    "schema_consistency",
+)
 
 CATEGORY_TOPIC_SEQUENCE = {
     "clear_answer": [
@@ -575,6 +583,12 @@ def make_base_row(
     citations: list[dict[str, Any]],
     seed: int,
 ) -> dict[str, Any]:
+    scoring_dimensions = {dimension: None for dimension in SCORING_DIMENSIONS}
+    if category != "clarification_required":
+        scoring_dimensions["clarification_quality"] = "not_applicable"
+    if category != "genuine_ambiguity":
+        scoring_dimensions["ambiguity_handling"] = "not_applicable"
+
     return {
         "id": f"rq-{category.replace('_', '-')}-{index + 1:03d}",
         "category": category,
@@ -591,6 +605,7 @@ def make_base_row(
         "merchant_context_assumed": {},
         "missing_facts": [],
         "confidence": "high" if category == "clear_answer" else "medium",
+        "scoring_dimensions": scoring_dimensions,
         "generation_metadata": {
             "source_doc_version": SOURCE_DOC_VERSION,
             "script_seed": seed,

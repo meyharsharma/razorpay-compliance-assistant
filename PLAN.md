@@ -100,6 +100,14 @@ Each JSONL row will use the following schema.
   "merchant_context_assumed": {},
   "missing_facts": [],
   "confidence": "high | medium | low",
+  "scoring_dimensions": {
+    "category_correctness": null,
+    "citation_support": null,
+    "response_quality": null,
+    "clarification_quality": "not_applicable",
+    "ambiguity_handling": "not_applicable",
+    "schema_consistency": null
+  },
   "generation_metadata": {
     "source_doc_version": "razorpay_terms_2026_01_01",
     "script_seed": 42,
@@ -127,6 +135,7 @@ Each JSONL row will use the following schema.
 - `merchant_context_assumed`: Facts baked into the example. This makes the training example auditable.
 - `missing_facts`: Facts needed before the assistant can answer confidently. This is especially important for category B.
 - `confidence`: High, medium, or low, based on how strongly the ToS supports the response.
+- `scoring_dimensions`: Evaluation placeholders for the 6-dimension judge rubric. Applicable dimensions are `null` until scored; category-specific dimensions that do not apply are marked `not_applicable`.
 - `generation_metadata`: Pipeline traceability, including source version, seed, determinism, template ID, and model ID if an LLM is used.
 
 ## Important Source-Document Considerations
@@ -274,14 +283,18 @@ Outputs:
 
 Score each example from 1 to 5 on the applicable dimensions:
 
-- `category_correctness`: Whether the example belongs in its labeled category.
-- `citation_support`: Whether the cited clauses support the assistant response.
-- `response_quality`: Whether the response is useful, concise, commercially practical, and appropriately caveated.
-- `clarification_quality`: For category B, whether the assistant asks a targeted clarifying question and explains why the missing fact matters.
-- `ambiguity_handling`: For category C, whether the assistant honestly flags uncertainty, describes what is known, and recommends a sensible next step.
-- `schema_consistency`: Whether structured fields are internally consistent with the labeled category and response.
+- 1 = poor
+- 3 = acceptable but flawed
+- 5 = excellent
 
-Use `null` for dimensions that do not apply to a given category.
+- `category_correctness`: Does the example belong in the labeled category? Clear-answer examples must be answerable from the ToS; clarification-required examples must depend on a missing fact; genuine-ambiguity examples must be unresolved by the ToS alone.
+- `citation_support`: Do the cited clauses actually support the response? This catches hallucinated citations, weak citations, and cases where the response goes beyond the cited clause.
+- `response_quality`: Is the assistant response useful, concise, compliant, and commercially practical? It should sound like a good compliance assistant, not a vague legal disclaimer machine.
+- `clarification_quality`: Only for category B. Does the example ask a targeted clarifying question, and does `why_clarification_matters` explain the decision point? For non-B rows, mark `not_applicable`.
+- `ambiguity_handling`: Only for category C. Does the response honestly flag uncertainty, explain what is known, and recommend a sensible next step? For non-C rows, mark `not_applicable`.
+- `schema_consistency`: Are the structured fields internally consistent? Examples: `needs_clarification` is true only for category B; category C has `ambiguity_reason`; clear-answer rows have no unnecessary clarifying question; missing facts align with the response.
+
+Use `null` for applicable dimensions that have not yet been scored, an integer from 1 to 5 after scoring, and `not_applicable` only for dimensions that do not apply to a row's category.
 
 #### Pass/Fail Logic
 

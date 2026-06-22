@@ -161,7 +161,20 @@ Rules defining the three answerability categories and the dataset fields each ca
 
 `data/synthetic_qa.jsonl`
 
-Generated Q&A dataset. Each line is one JSON object with the question, ideal assistant response, category label, citation objects, tags, missing facts or ambiguity details, and generation metadata.
+Generated Q&A dataset. Each line is one JSON object with the question, ideal assistant response, category label, citation objects, tags, missing facts or ambiguity details, scoring-dimension placeholders, and generation metadata.
+
+## Scoring Dimensions
+
+Each row includes a `scoring_dimensions` object for evaluation:
+
+- `category_correctness`
+- `citation_support`
+- `response_quality`
+- `clarification_quality`
+- `ambiguity_handling`
+- `schema_consistency`
+
+Scores use a 1-5 scale where 1 is poor, 3 is acceptable but flawed, and 5 is excellent. Applicable dimensions are `null` until scored. `clarification_quality` is `not_applicable` for non-`clarification_required` rows, and `ambiguity_handling` is `not_applicable` for non-`genuine_ambiguity` rows.
 
 ## Seeds And Determinism
 
@@ -188,7 +201,7 @@ The current generator is deterministic because it uses fixed templates, fixed ca
 With the current checked-in inputs and default arguments, `data/synthetic_qa.jsonl` has SHA-256:
 
 ```text
-8a966b275dedfc6535d49cb4decc599373ee9dd5c08c5fa02029cc356b1fa17f
+923b9bd758e5466ce91c9c5b063d422e00805705f3fd0666c834fd83f0640e8c
 ```
 
 Changing `--seed` currently changes the recorded metadata seed, but it does not randomize row content because the generator's selection logic is template and sequence based. The seed is reserved for future randomization or paraphrasing steps.

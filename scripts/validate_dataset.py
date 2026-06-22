@@ -14,6 +14,14 @@ from typing import Any
 DEFAULT_DATASET_PATH = Path("data/synthetic_qa.jsonl")
 ALLOWED_CATEGORIES = {"clear_answer", "clarification_required", "genuine_ambiguity"}
 ALLOWED_CONFIDENCE = {"high", "medium", "low"}
+SCORING_DIMENSIONS = {
+    "category_correctness",
+    "citation_support",
+    "response_quality",
+    "clarification_quality",
+    "ambiguity_handling",
+    "schema_consistency",
+}
 MIN_TOTAL = 45
 MIN_PER_CATEGORY = 15
 GENERIC_CLARIFICATION_PHRASES = {
@@ -40,6 +48,7 @@ REQUIRED_FIELDS = {
     "merchant_context_assumed",
     "missing_facts",
     "confidence",
+    "scoring_dimensions",
     "generation_metadata",
 }
 
@@ -138,6 +147,41 @@ def validate_citations(row: dict[str, Any], prefix: str, errors: list[str]) -> N
                 errors.append(f"{citation_prefix}.{field} must be a non-empty string")
 
 
+def validate_scoring_dimensions(row: dict[str, Any], prefix: str, errors: list[str]) -> None:
+    scoring_dimensions = row.get("scoring_dimensions")
+    category = row.get("category")
+    if not isinstance(scoring_dimensions, dict):
+        errors.append(f"{prefix}.scoring_dimensions must be an object")
+        return
+
+    missing = sorted(SCORING_DIMENSIONS - set(scoring_dimensions))
+    extra = sorted(set(scoring_dimensions) - SCORING_DIMENSIONS)
+    for dimension in missing:
+        errors.append(f"{prefix}.scoring_dimensions missing required dimension: {dimension}")
+    for dimension in extra:
+        errors.append(f"{prefix}.scoring_dimensions has unknown dimension: {dimension}")
+
+    for dimension in SCORING_DIMENSIONS & set(scoring_dimensions):
+        value = scoring_dimensions[dimension]
+        if value != "not_applicable" and value is not None and not (
+            isinstance(value, int) and not isinstance(value, bool) and 1 <= value <= 5
+        ):
+            errors.append(
+                f"{prefix}.scoring_dimensions.{dimension} must be null, not_applicable, or an integer 1-5"
+            )
+
+    expected_not_applicable = {
+        "clarification_quality": category != "clarification_required",
+        "ambiguity_handling": category != "genuine_ambiguity",
+    }
+    for dimension, should_be_not_applicable in expected_not_applicable.items():
+        value = scoring_dimensions.get(dimension)
+        if should_be_not_applicable and value != "not_applicable":
+            errors.append(f"{prefix}.scoring_dimensions.{dimension} must be not_applicable for {category}")
+        if not should_be_not_applicable and value == "not_applicable":
+            errors.append(f"{prefix}.scoring_dimensions.{dimension} must be applicable for {category}")
+
+
 def validate_rows(rows: list[dict[str, Any]]) -> list[str]:
     errors: list[str] = []
     if len(rows) < MIN_TOTAL:
@@ -180,6 +224,7 @@ def validate_rows(rows: list[dict[str, Any]]) -> list[str]:
         for field in ("legal_issue_tags", "product_tags"):
             require_list(row, field, prefix, errors)
         validate_citations(row, prefix, errors)
+        validate_scoring_dimensions(row, prefix, errors)
 
         if category == "clear_answer":
             if row.get("needs_clarification") is not False:
