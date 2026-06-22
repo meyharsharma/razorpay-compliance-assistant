@@ -16,6 +16,13 @@ ALLOWED_CATEGORIES = {"clear_answer", "clarification_required", "genuine_ambigui
 ALLOWED_CONFIDENCE = {"high", "medium", "low"}
 MIN_TOTAL = 45
 MIN_PER_CATEGORY = 15
+GENERIC_CLARIFICATION_PHRASES = {
+    "can you provide more details",
+    "please provide more details",
+    "can you clarify",
+    "need more information",
+    "need more details",
+}
 
 REQUIRED_FIELDS = {
     "id",
@@ -76,6 +83,40 @@ def require_list(row: dict[str, Any], field: str, prefix: str, errors: list[str]
         errors.append(f"{prefix}.{field} must be a non-empty array")
 
 
+def has_text(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def validate_targeted_clarifying_question(row: dict[str, Any], prefix: str, errors: list[str]) -> None:
+    question = row.get("clarifying_question")
+    if not has_text(question):
+        return
+
+    normalized = " ".join(question.lower().split())
+    if not question.strip().endswith("?"):
+        errors.append(f"{prefix}.clarifying_question must be phrased as a question")
+    if question.count("?") != 1:
+        errors.append(f"{prefix}.clarifying_question must ask exactly one targeted question")
+    if normalized in GENERIC_CLARIFICATION_PHRASES:
+        errors.append(f"{prefix}.clarifying_question must be targeted, not a generic follow-up")
+    if len(question.split()) < 5:
+        errors.append(f"{prefix}.clarifying_question is too short to be a targeted question")
+
+    missing_facts = row.get("missing_facts")
+    if isinstance(missing_facts, list) and missing_facts:
+        question_words = set(normalized.replace("?", "").split())
+        matched_fact = False
+        for fact in missing_facts:
+            if not isinstance(fact, str):
+                continue
+            fact_words = [word for word in fact.lower().replace("_", " ").split() if len(word) > 3]
+            if fact_words and any(word in question_words for word in fact_words):
+                matched_fact = True
+                break
+        if not matched_fact:
+            errors.append(f"{prefix}.clarifying_question must target at least one listed missing fact")
+
+
 def validate_citations(row: dict[str, Any], prefix: str, errors: list[str]) -> None:
     citations = row.get("citations")
     if not isinstance(citations, list) or not citations:
@@ -110,7 +151,9 @@ def validate_rows(rows: list[dict[str, Any]]) -> list[str]:
     counts = Counter(row.get("category") for row in rows)
     for category in sorted(ALLOWED_CATEGORIES):
         if counts[category] < MIN_PER_CATEGORY:
-            errors.append(f"{category} must have at least {MIN_PER_CATEGORY} examples")
+            errors.append(
+                f"{category} must have at least {MIN_PER_CATEGORY} examples; found {counts[category]}"
+            )
 
     for index, row in enumerate(rows):
         prefix = f"rows[{index}]"
@@ -141,6 +184,8 @@ def validate_rows(rows: list[dict[str, Any]]) -> list[str]:
         if category == "clear_answer":
             if row.get("needs_clarification") is not False:
                 errors.append(f"{prefix}.needs_clarification must be false for clear_answer")
+            if not isinstance(row.get("citations"), list) or not row["citations"]:
+                errors.append(f"{prefix}.citations must be present for every clear_answer")
             for field in (
                 "clarifying_question",
                 "why_clarification_matters",
@@ -158,6 +203,7 @@ def validate_rows(rows: list[dict[str, Any]]) -> list[str]:
             for field in ("clarifying_question", "why_clarification_matters"):
                 require_text(row, field, prefix, errors)
             require_list(row, "missing_facts", prefix, errors)
+            validate_targeted_clarifying_question(row, prefix, errors)
             if row.get("ambiguity_reason") is not None or row.get("recommended_next_step") is not None:
                 errors.append(f"{prefix} ambiguity fields must be null for clarification_required")
 

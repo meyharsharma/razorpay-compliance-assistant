@@ -6,9 +6,12 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
+
+from validate_dataset import validate_rows
 
 
 DEFAULT_TERMS_PATH = Path("data/razorpay_terms_normalized.json")
@@ -402,12 +405,12 @@ def preferred_citation_ids(category: str, topic_id: str, occurrence_index: int) 
 
 
 def clarifying_question(trigger: str, topic: dict[str, Any]) -> str:
-    topic_name = topic["topic"]
     if trigger.lower().startswith("whether"):
         stem = trigger[8:]
         return f"Can you confirm whether {stem}?"
     if trigger.lower().startswith("which"):
-        return f"Which {trigger[6:]}?"
+        stem = trigger[6:]
+        return f"Which {stem} in this scenario?"
     return f"Can you confirm the {trigger[0].lower() + trigger[1:]}?"
 
 
@@ -676,6 +679,12 @@ def main() -> int:
     args = parser.parse_args()
 
     rows = generate_examples(args.terms, args.inventory, args.seed, args.per_category)
+    errors = validate_rows(rows)
+    if errors:
+        for error in errors:
+            print(f"ERROR: {error}", file=sys.stderr)
+        return 1
+
     write_jsonl(rows, args.output)
     print(f"wrote {len(rows)} examples to {args.output}")
     for category in CATEGORIES:
