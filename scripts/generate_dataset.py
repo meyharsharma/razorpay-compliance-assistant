@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +19,298 @@ SOURCE_DOC_VERSION = "razorpay_terms_2026_01_01"
 
 CATEGORIES = ("clear_answer", "clarification_required", "genuine_ambiguity")
 PER_CATEGORY = 15
+
+CATEGORY_TOPIC_SEQUENCE = {
+    "clear_answer": [
+        "refunds_payment_aggregation",
+        "refunds_payment_aggregation",
+        "fees_general",
+        "chargebacks",
+        "fraudulent_transactions",
+        "settlements_holds_and_deductions",
+        "prohibited_goods_and_services",
+        "gaming_and_gambling",
+        "marketplace_and_sub_merchants",
+        "kyc_onboarding_monitoring",
+        "tax_and_invoicing",
+        "data_protection_and_tokenization",
+        "suspension_and_termination",
+        "cross_border_outward",
+        "product_specific_terms",
+    ],
+    "clarification_required": [
+        "fraudulent_transactions",
+        "fraudulent_transactions",
+        "refunds_payment_aggregation",
+        "chargebacks",
+        "settlements_holds_and_deductions",
+        "prohibited_goods_and_services",
+        "gaming_and_gambling",
+        "marketplace_and_sub_merchants",
+        "kyc_onboarding_monitoring",
+        "tax_and_invoicing",
+        "data_protection_and_tokenization",
+        "suspension_and_termination",
+        "cross_border_outward",
+        "product_specific_terms",
+        "fees_general",
+    ],
+    "genuine_ambiguity": [
+        "gaming_and_gambling",
+        "suspension_and_termination",
+        "fees_general",
+        "refunds_payment_aggregation",
+        "chargebacks",
+        "fraudulent_transactions",
+        "settlements_holds_and_deductions",
+        "prohibited_goods_and_services",
+        "marketplace_and_sub_merchants",
+        "kyc_onboarding_monitoring",
+        "tax_and_invoicing",
+        "data_protection_and_tokenization",
+        "cross_border_outward",
+        "product_specific_terms",
+        "gaming_and_gambling",
+    ],
+}
+
+QUESTION_BANK = {
+    "clear_answer": {
+        "refunds_payment_aggregation": [
+            "We refunded a customer their full payment. Do we still have to pay Razorpay their processing fee?",
+            "A customer paid via UPI but we never captured the payment. What happens to their money?",
+            "If we issue a refund, does Razorpay send it back to the same payment method the customer used?",
+        ],
+        "fees_general": [
+            "When Razorpay quotes fees to us, are taxes charged on top of those fees?",
+            "Where should finance look for Razorpay's monthly fee invoices?",
+        ],
+        "chargebacks": [
+            "A card network raised a chargeback. Are we responsible for the chargeback amount under the Razorpay terms?",
+            "If there is not enough settlement money to cover a chargeback, can Razorpay send us a debit note?",
+        ],
+        "fraudulent_transactions": [
+            "If a transaction turns out to be fraudulent, does Razorpay take responsibility for the liability?",
+            "Do we have to help Razorpay and the banks respond to fraud complaints and queries?",
+        ],
+        "settlements_holds_and_deductions": [
+            "For a domestic payment, is the default settlement timeline five days after money reaches the escrow account?",
+            "Can Razorpay deduct fees, chargebacks, penalties, or fines before settling money to us?",
+        ],
+        "prohibited_goods_and_services": [
+            "Can we use Razorpay to accept payments for NFTs or other crypto products?",
+            "Can one of our sellers process gambling-related payments through our Razorpay setup?",
+        ],
+        "gaming_and_gambling": [
+            "Can we collect Razorpay payments for real-money online gaming?",
+            "Are sports betting or lottery payments allowed under the Razorpay terms?",
+        ],
+        "marketplace_and_sub_merchants": [
+            "For our marketplace, do sellers need to be onboarded and contractually tied to us before we accept Razorpay payments for them?",
+            "If a sub-merchant violates the Razorpay terms, are we still responsible to Razorpay?",
+        ],
+        "kyc_onboarding_monitoring": [
+            "Can Razorpay ask us for additional KYC documents after onboarding?",
+            "Can inaccurate business information lead to suspension or termination?",
+        ],
+        "tax_and_invoicing": [
+            "Who is responsible for keeping our GSTIN and tax details accurate in Razorpay?",
+            "If we are an e-commerce operator, does Razorpay say it must deduct Section 194O TDS for us?",
+        ],
+        "data_protection_and_tokenization": [
+            "Can our custom checkout store full card credentials after a customer pays?",
+            "If we suspect a customer data breach, do we need to notify Razorpay within 24 hours?",
+        ],
+        "suspension_and_termination": [
+            "Can Razorpay immediately suspend our services and settlements if it believes we are using the platform unlawfully?",
+            "If the agreement is terminated, do our already-accrued payment obligations disappear?",
+        ],
+        "cross_border_outward": [
+            "We are based outside India and collect from Indian customers. Do the cross-border outward terms apply to us?",
+            "For cross-border outward payments, can Razorpay settle before the escrow account is credited?",
+        ],
+        "product_specific_terms": [
+            "If the product-specific terms conflict with the general Razorpay terms, which set of terms controls?",
+            "For e-mandates, does onboarding depend on Sponsor Bank registration?",
+        ],
+    },
+    "clarification_required": {
+        "fraudulent_transactions": [
+            "A customer says their card was used without their permission. Can Razorpay hold our settlement money?",
+            "A fraudulent transaction happened and Razorpay already settled the money to us. What happens now?",
+            "If a fraud report comes in, can we tell finance that Razorpay will definitely pause settlement?",
+        ],
+        "refunds_payment_aggregation": [
+            "A customer wants a refund today. Can Razorpay process it for us?",
+            "We have an uncaptured late-authorized payment. Will Razorpay auto-refund it?",
+        ],
+        "chargebacks": [
+            "Razorpay asked for chargeback documents. Do we still have time to submit them?",
+            "Can Razorpay withhold settlement after termination for possible chargebacks?",
+        ],
+        "settlements_holds_and_deductions": [
+            "A payout has not arrived yet. Is Razorpay late under the settlement timeline?",
+            "Can we promise the merchant that their international settlement will arrive within the domestic timeline?",
+        ],
+        "prohibited_goods_and_services": [
+            "Our product has crypto-adjacent rewards but no token trading. Is it prohibited on Razorpay?",
+            "A seller wants to list a regulated product. Can we process payments for it?",
+        ],
+        "gaming_and_gambling": [
+            "The product team says this is a skill game with prizes. Can we use Razorpay for payments?",
+            "Can we process entry fees for a tournament that pays cash prizes?",
+        ],
+        "marketplace_and_sub_merchants": [
+            "We want to process payments for third-party sellers. Does Razorpay allow that?",
+            "Can settlement go directly to a third party instead of our merchant account?",
+        ],
+        "kyc_onboarding_monitoring": [
+            "Razorpay asked for more documents. Can it stop settlement until we provide them?",
+            "A regulator asked Razorpay for customer documents. Do we have to provide them?",
+        ],
+        "tax_and_invoicing": [
+            "Should Razorpay withhold tax on this cross-border settlement?",
+            "Do the LRS and TCS declaration obligations apply to this transaction?",
+        ],
+        "data_protection_and_tokenization": [
+            "Can our integration store this payment data for reconciliation?",
+            "Do we need PCI DSS or PA-DSS compliance for this flow?",
+        ],
+        "suspension_and_termination": [
+            "Razorpay paused our settlement. Is that allowed under the suspension clause?",
+            "Can either side terminate at will here, or does another agreement change that?",
+        ],
+        "cross_border_outward": [
+            "We have an overseas merchant collecting from Indian customers. Which Razorpay cross-border rules apply?",
+            "Can Razorpay hold a PA-CB outward settlement until documents are provided?",
+        ],
+        "product_specific_terms": [
+            "We are using Magic Checkout. Do the general terms answer this, or do product-specific terms apply?",
+            "For tokenization, is Razorpay acting as a technical service provider or as the payment aggregator?",
+        ],
+        "fees_general": [
+            "Razorpay changed pricing for a value-added service. Can we tell finance the exact fee from the ToS?",
+            "We have fee credits on the account. Will Razorpay deduct fees from credits or settlement?",
+        ],
+    },
+    "genuine_ambiguity": {
+        "gaming_and_gambling": [
+            "We're building a real-money gaming feature. Can we use Razorpay to collect payments for it?",
+            "Our game involves skill, prizes, and paid entry. Do the Razorpay terms alone tell us whether it is allowed?",
+        ],
+        "suspension_and_termination": [
+            "Razorpay suspended our account under Clause 16. How long can they hold our funds?",
+            "Razorpay says our activity looked suspicious. Do the terms give a fixed deadline for restoring settlement?",
+        ],
+        "fees_general": [
+            "Can we calculate Razorpay's exact future processing fee from the ToS alone?",
+            "Does the ToS lock Razorpay into today's pricing forever?",
+        ],
+        "refunds_payment_aggregation": [
+            "What is the exact SLA for every Razorpay refund rail and customer bank?",
+            "Do the terms fully define what our customer-facing refund policy must say?",
+        ],
+        "chargebacks": [
+            "Can the ToS alone tell us how the Facility Provider will decide this chargeback?",
+            "If the bank asks for a different document timeline, do the Razorpay terms fully resolve the conflict?",
+        ],
+        "fraudulent_transactions": [
+            "For a fraud dispute after settlement, can we answer without checking RBI or NPCI rules?",
+            "Do the Razorpay terms fully define every fraud-liability threshold we need to apply?",
+        ],
+        "settlements_holds_and_deductions": [
+            "If Razorpay thinks settlement is not feasible, do the terms give a universal maximum hold period?",
+            "Can we tell a merchant the exact release date for every risk hold from the ToS alone?",
+        ],
+        "prohibited_goods_and_services": [
+            "Our product is near a prohibited category but not listed exactly. Do the terms alone decide if Razorpay allows it?",
+            "If Razorpay or a bank updates a prohibited category, can the static ToS tell us the final answer?",
+        ],
+        "marketplace_and_sub_merchants": [
+            "What exact permits do we need for every marketplace seller and jurisdiction?",
+            "Do the terms fully define the due diligence we must run on every sub-merchant?",
+        ],
+        "kyc_onboarding_monitoring": [
+            "What exact KYC documents will Razorpay consider sufficient for this merchant?",
+            "Can the ToS alone tell us when Razorpay will be satisfied with our onboarding documents?",
+        ],
+        "tax_and_invoicing": [
+            "Can the Razorpay terms alone tell us the final tax treatment for this cross-border payout?",
+            "Do the terms replace tax advice for GST, TDS, TCS, and withholding questions?",
+        ],
+        "data_protection_and_tokenization": [
+            "Do the Razorpay terms alone list every privacy-law obligation we have for customer data?",
+            "Can we skip reviewing the Privacy Policy because the ToS covers all data-protection duties?",
+        ],
+        "cross_border_outward": [
+            "Can we promise the exact remittance date for a cross-border outward transaction from the ToS alone?",
+            "Do the terms alone decide all FEMA, RBI, LRS, and tax compliance questions for this payment?",
+        ],
+        "product_specific_terms": [
+            "Do the general terms alone tell us every operational detail for Magic Checkout?",
+            "Can we answer offline-device pricing questions without checking the product pricing terms?",
+        ],
+    },
+}
+
+PREFERRED_CITATIONS = {
+    "clear_answer": {
+        "refunds_payment_aggregation": [
+            ["clause-0202"],
+            ["clause-0203"],
+            ["clause-0201"],
+        ],
+        "fees_general": [["clause-0078"], ["clause-0079"]],
+        "chargebacks": [["clause-0195"], ["clause-0193"]],
+        "fraudulent_transactions": [["clause-0207"], ["clause-0208"]],
+        "settlements_holds_and_deductions": [["clause-0181"], ["clause-0189", "clause-0191"]],
+        "prohibited_goods_and_services": [["clause-0169"], ["clause-0145", "clause-0167"]],
+        "gaming_and_gambling": [["clause-0145", "clause-0167"], ["clause-0145"]],
+        "marketplace_and_sub_merchants": [["clause-0322", "clause-0323"], ["clause-0329", "clause-0330"]],
+        "kyc_onboarding_monitoring": [["clause-0041", "clause-0043"], ["clause-0037", "clause-0043"]],
+        "tax_and_invoicing": [["clause-0082"], ["clause-0084"]],
+        "data_protection_and_tokenization": [["clause-0098"], ["clause-0099"]],
+        "suspension_and_termination": [["clause-0119", "clause-0124"], ["clause-0131"]],
+        "cross_border_outward": [["clause-0307", "clause-0308"], ["clause-0312"]],
+        "product_specific_terms": [["clause-0209"], ["clause-0352"]],
+    },
+    "clarification_required": {
+        "fraudulent_transactions": [
+            ["clause-0204"],
+            ["clause-0205", "clause-0206", "clause-0208"],
+            ["clause-0204"],
+        ],
+        "refunds_payment_aggregation": [["clause-0199", "clause-0200"], ["clause-0203"]],
+        "chargebacks": [["clause-0193", "clause-0194"], ["clause-0196"]],
+        "settlements_holds_and_deductions": [["clause-0181", "clause-0183"], ["clause-0183"]],
+        "prohibited_goods_and_services": [["clause-0169"], ["clause-0174"]],
+        "gaming_and_gambling": [["clause-0145", "clause-0167"], ["clause-0145"]],
+        "marketplace_and_sub_merchants": [["clause-0322", "clause-0323"], ["clause-0328"]],
+        "kyc_onboarding_monitoring": [["clause-0041", "clause-0043"], ["clause-0218", "clause-0219"]],
+        "tax_and_invoicing": [["clause-0313", "clause-0314"], ["clause-0336", "clause-0340"]],
+        "data_protection_and_tokenization": [["clause-0096", "clause-0098"], ["clause-0097"]],
+        "suspension_and_termination": [["clause-0119", "clause-0124"], ["clause-0130"]],
+        "cross_border_outward": [["clause-0307", "clause-0308"], ["clause-0312", "clause-0313"]],
+        "product_specific_terms": [["clause-0209"], ["clause-0399", "clause-0406"]],
+        "fees_general": [["clause-0077", "clause-0232"], ["clause-0188"]],
+    },
+    "genuine_ambiguity": {
+        "gaming_and_gambling": [["clause-0145", "clause-0167"], ["clause-0145", "clause-0167"]],
+        "suspension_and_termination": [["clause-0119", "clause-0124"], ["clause-0119", "clause-0124"]],
+        "fees_general": [["clause-0077", "clause-0107"], ["clause-0077"]],
+        "refunds_payment_aggregation": [["clause-0199", "clause-0200"], ["clause-0201", "clause-0202"]],
+        "chargebacks": [["clause-0193", "clause-0194"], ["clause-0193"]],
+        "fraudulent_transactions": [["clause-0205", "clause-0206", "clause-0208"], ["clause-0208"]],
+        "settlements_holds_and_deductions": [["clause-0183", "clause-0186"], ["clause-0183", "clause-0225"]],
+        "prohibited_goods_and_services": [["clause-0174"], ["clause-0177"]],
+        "marketplace_and_sub_merchants": [["clause-0322", "clause-0328"], ["clause-0324", "clause-0329"]],
+        "kyc_onboarding_monitoring": [["clause-0041", "clause-0043"], ["clause-0043"]],
+        "tax_and_invoicing": [["clause-0313", "clause-0314"], ["clause-0081", "clause-0084"]],
+        "data_protection_and_tokenization": [["clause-0085", "clause-0096"], ["clause-0085"]],
+        "cross_border_outward": [["clause-0313", "clause-0317"], ["clause-0311", "clause-0335"]],
+        "product_specific_terms": [["clause-0352", "clause-0353"], ["clause-0265", "clause-0301"]],
+    },
+}
 
 
 def load_json(path: Path) -> Any:
@@ -41,13 +334,16 @@ def clause_label(clause: dict[str, Any]) -> str:
     marker = clause.get("marker")
     if marker:
         return str(marker)
+    subsection = hierarchy.get("subsection")
+    if subsection:
+        return str(subsection)
     section_title = hierarchy.get("section_title")
     return str(section_title or "Clause")
 
 
 def section_name(clause: dict[str, Any]) -> str | None:
     hierarchy = clause.get("hierarchy", {})
-    return hierarchy.get("section_title") or hierarchy.get("clause_title")
+    return hierarchy.get("subsection") or hierarchy.get("section_title") or hierarchy.get("clause_title")
 
 
 def part_name(clause: dict[str, Any]) -> str:
@@ -62,10 +358,11 @@ def build_citations(
     clauses_by_id: dict[str, dict[str, Any]],
     metadata: dict[str, Any],
     max_citations: int = 2,
+    preferred_clause_ids: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     citations: list[dict[str, Any]] = []
     effective_date = metadata.get("effective_date") or metadata["effective_date_iso"]
-    candidate_ids = [
+    candidate_ids = preferred_clause_ids or [
         clause_id
         for clause_id in topic["source_clause_ids"]
         if "DEFINITIONS" not in clauses_by_id[clause_id]["clause_path_text"]
@@ -97,6 +394,13 @@ def pick(values: list[str], index: int) -> str:
     return values[index % len(values)]
 
 
+def preferred_citation_ids(category: str, topic_id: str, occurrence_index: int) -> list[str] | None:
+    topic_preferences = PREFERRED_CITATIONS.get(category, {}).get(topic_id)
+    if not topic_preferences:
+        return None
+    return pick(topic_preferences, occurrence_index)
+
+
 def clarifying_question(trigger: str, topic: dict[str, Any]) -> str:
     topic_name = topic["topic"]
     if trigger.lower().startswith("whether"):
@@ -112,6 +416,10 @@ def missing_fact_name(trigger: str) -> str:
 
 
 def clear_question(use: str, topic: dict[str, Any], index: int) -> str:
+    questions = QUESTION_BANK["clear_answer"].get(topic["topic_id"])
+    if questions:
+        return pick(questions, index)
+
     openers = [
         "Quick compliance check:",
         "Finance is asking:",
@@ -135,6 +443,10 @@ def clear_response(use: str, topic: dict[str, Any], citations: list[dict[str, An
 
 
 def clarification_question(trigger: str, topic: dict[str, Any], index: int) -> str:
+    questions = QUESTION_BANK["clarification_required"].get(topic["topic_id"])
+    if questions:
+        return pick(questions, index)
+
     prompts = [
         "Can we answer the ToS question yet",
         "Need a quick read from the terms",
@@ -165,6 +477,10 @@ def clarification_response(
 
 
 def ambiguity_question(trigger: str, topic: dict[str, Any], index: int) -> str:
+    questions = QUESTION_BANK["genuine_ambiguity"].get(topic["topic_id"])
+    if questions:
+        return pick(questions, index)
+
     prompts = [
         "Can we rely on the Razorpay ToS alone to determine",
         "Does the ToS give us a final answer on",
@@ -294,36 +610,44 @@ def generate_examples(
     metadata = terms["metadata"]
     clauses_by_id = {clause["id"]: clause for clause in terms["clauses"]}
     topics = inventory["topics"]
+    topics_by_id = {topic["topic_id"]: topic for topic in topics}
 
     rows: list[dict[str, Any]] = []
     for category in CATEGORIES:
-        supported = [topic for topic in topics if category in topic["supports_answerability"]]
+        sequence = CATEGORY_TOPIC_SEQUENCE[category]
+        supported = [topics_by_id[topic_id] for topic_id in sequence]
         if len(supported) < 1:
             raise ValueError(f"no inventory topics support {category}")
 
+        occurrences: defaultdict[str, int] = defaultdict(int)
         for index in range(per_category):
             topic = supported[index % len(supported)]
-            citations = build_citations(topic, clauses_by_id, metadata)
+            if category not in topic["supports_answerability"]:
+                raise ValueError(f"{topic['topic_id']} does not support {category}")
+            occurrence_index = occurrences[topic["topic_id"]]
+            occurrences[topic["topic_id"]] += 1
+            preferred_ids = preferred_citation_ids(category, topic["topic_id"], occurrence_index)
+            citations = build_citations(topic, clauses_by_id, metadata, preferred_clause_ids=preferred_ids)
             row = make_base_row(category, index, topic, citations, seed)
 
             if category == "clear_answer":
-                use = pick(topic["clear_answer_uses"], index)
-                row["user_question"] = clear_question(use, topic, index)
+                use = pick(topic["clear_answer_uses"], occurrence_index)
+                row["user_question"] = clear_question(use, topic, occurrence_index)
                 row["assistant_response"] = clear_response(use, topic, citations)
 
             elif category == "clarification_required":
-                trigger = pick(topic["clarification_triggers"], index)
+                trigger = pick(topic["clarification_triggers"], occurrence_index)
                 response, question, why = clarification_response(trigger, topic, citations)
-                row["user_question"] = clarification_question(trigger, topic, index)
+                row["user_question"] = clarification_question(trigger, topic, occurrence_index)
                 row["assistant_response"] = response
                 row["clarifying_question"] = question
                 row["why_clarification_matters"] = why
                 row["missing_facts"] = [missing_fact_name(trigger)]
 
             else:
-                trigger = pick(topic["ambiguity_triggers"], index)
+                trigger = pick(topic["ambiguity_triggers"], occurrence_index)
                 response, reason, next_step = ambiguity_response(trigger, topic, citations)
-                row["user_question"] = ambiguity_question(trigger, topic, index)
+                row["user_question"] = ambiguity_question(trigger, topic, occurrence_index)
                 row["assistant_response"] = response
                 row["ambiguity_reason"] = reason
                 row["recommended_next_step"] = next_step
@@ -338,7 +662,7 @@ def write_jsonl(rows: list[dict[str, Any]], output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as handle:
         for row in rows:
-            handle.write(json.dumps(row, ensure_ascii=False, sort_keys=True))
+            handle.write(json.dumps(row, ensure_ascii=False))
             handle.write("\n")
 
 
