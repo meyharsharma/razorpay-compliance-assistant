@@ -255,7 +255,154 @@ Minimum validation rules:
 - Category A rows do not ask unnecessary clarifying questions
 - `confidence` is one of `high`, `medium`, or `low`
 
-### 6. Write README
+### 6. Run Quality Evaluation
+
+Design and run an LLM-as-judge evaluation on the generated dataset.
+
+The goal is to evaluate whether the dataset teaches the desired compliance-assistant behavior, not only whether the JSONL is structurally valid.
+
+Input:
+
+- `data/synthetic_qa.jsonl`
+
+Outputs:
+
+- `eval/judge_results.jsonl`
+- `eval/eval_summary.md`
+
+#### Scoring Dimensions
+
+Score each example from 1 to 5 on the applicable dimensions:
+
+- `category_correctness`: Whether the example belongs in its labeled category.
+- `citation_support`: Whether the cited clauses support the assistant response.
+- `response_quality`: Whether the response is useful, concise, commercially practical, and appropriately caveated.
+- `clarification_quality`: For category B, whether the assistant asks a targeted clarifying question and explains why the missing fact matters.
+- `ambiguity_handling`: For category C, whether the assistant honestly flags uncertainty, describes what is known, and recommends a sensible next step.
+- `schema_consistency`: Whether structured fields are internally consistent with the labeled category and response.
+
+Use `null` for dimensions that do not apply to a given category.
+
+#### Pass/Fail Logic
+
+For each row:
+
+- Calculate `overall_score` as the average of applicable dimension scores.
+- Mark `passed: true` only if `overall_score >= 4.0` and there are no critical failures.
+
+Critical failures should override the average score.
+
+Examples of critical failures:
+
+- Wrong category
+- Citation does not support the answer
+- Category C response gives a definitive answer despite genuine ambiguity
+- Category B response lacks a targeted clarifying question
+- Category A response refuses, over-hedges, or asks unnecessary clarifying questions
+
+Dataset-level quality targets:
+
+- Pass rate of at least 85%
+- Average overall score of at least 4.2 out of 5
+- No category below 80% pass rate
+
+#### Judge Prompt Requirements
+
+The judge prompt should include:
+
+- Assignment category definitions
+- The scoring rubric
+- The full dataset row
+- The cited evidence summaries and, where available, source clause text
+
+The judge should return strict JSON for each example:
+
+```json
+{
+  "id": "rzp_clear_001",
+  "scores": {
+    "category_correctness": 5,
+    "citation_support": 5,
+    "response_quality": 4,
+    "clarification_quality": null,
+    "ambiguity_handling": null,
+    "schema_consistency": 5
+  },
+  "overall_score": 4.75,
+  "passed": true,
+  "critical_failures": [],
+  "notes": "The response directly answers the question and the cited clause supports it."
+}
+```
+
+#### Evaluation Script
+
+Create `scripts/evaluate_dataset.py`.
+
+The script should:
+
+- Read `data/synthetic_qa.jsonl`
+- Run deterministic preflight checks before making LLM calls
+- Build judge prompts using a versioned rubric
+- Call the LLM judge with temperature 0
+- Parse strict JSON responses
+- Record model ID, prompt version, input file, timestamp, and run configuration
+- Write detailed per-example results to `eval/judge_results.jsonl`
+- Write aggregate findings to `eval/eval_summary.md`
+
+Deterministic preflight checks should include:
+
+- JSONL parses successfully
+- All required fields exist
+- Category counts are at least 15 each
+- Every row has at least one citation
+- Category B has `clarifying_question`, `why_clarification_matters`, and non-empty `missing_facts`
+- Category C has `ambiguity_reason` and `recommended_next_step`
+- `source_url` in citations is `https://razorpay.com/terms/`
+
+#### Eval Summary
+
+The summary should include:
+
+- Total examples
+- Examples by category
+- Overall pass rate
+- Average overall score
+- Average score by dimension
+- Average score by category
+- Critical failure counts
+- Most common quality issues
+
+It must also include the 3 worst examples, selected by failed status, lowest overall score, and number of critical failures.
+
+For each of the 3 worst examples, include approximately 50 words describing:
+
+- What is wrong
+- Where in the pipeline it came from
+- What caused the failure
+- What rubric or code change would catch it
+
+Example format:
+
+```text
+1. rzp_clarify_007
+This example asks about settlement holds but gives a broad answer instead of asking whether the Facility Provider has notified Razorpay. The failure came from the clarification template. The template lacked a required missing-fact check. Add a validator that category B responses must contain a targeted question tied to missing_facts.
+```
+
+#### Determinism Notes
+
+The LLM-as-judge step is not perfectly deterministic, even with temperature 0, because model/provider behavior can change.
+
+To reduce variance:
+
+- Use temperature 0
+- Use a fixed model name
+- Use a fixed prompt version
+- Use a stable dataset input
+- Record evaluation timestamp and model ID
+- Keep deterministic validation separate from LLM judgment
+
+### 7. Write README
 
 The README should explain:
 
@@ -290,8 +437,10 @@ Likely project structure:
 ├── scripts/
 │   ├── ingest_terms.py
 │   ├── generate_dataset.py
-│   └── validate_dataset.py
+│   ├── validate_dataset.py
+│   └── evaluate_dataset.py
 └── eval/
+    ├── judge_results.jsonl
     └── eval_summary.md
 ```
 
@@ -304,3 +453,4 @@ This plan is successful if the final dataset shows that the assistant can:
 - Recognize true ambiguity instead of over-answering
 - Preserve traceability from each answer back to the source document
 - Produce a repeatable JSONL artifact that can be inspected, regenerated, and evaluated
+- Include an LLM-as-judge evaluation with clear rubric scores, pass/fail logic, and analysis of the 3 worst examples
