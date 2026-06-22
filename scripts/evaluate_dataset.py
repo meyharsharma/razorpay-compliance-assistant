@@ -212,6 +212,7 @@ def call_openai_judge(prompt: str, model: str, timeout: int) -> str:
             {"role": "user", "content": prompt},
         ],
         "temperature": 0,
+        "max_output_tokens": 700,
     }
     request = urllib.request.Request(
         OPENAI_RESPONSES_URL,
@@ -256,6 +257,8 @@ def call_openrouter_judge(prompt: str, model: str, timeout: int) -> str:
             {"role": "user", "content": prompt},
         ],
         "temperature": 0,
+        "max_tokens": 700,
+        "response_format": {"type": "json_object"},
     }
     request = urllib.request.Request(
         OPENROUTER_CHAT_COMPLETIONS_URL,
@@ -491,6 +494,40 @@ def evaluate_rows(
     return records
 
 
+def evaluate_rows_to_jsonl(
+    rows: list[dict[str, Any]],
+    dataset_path: Path,
+    output_path: Path,
+    provider: str,
+    model: str,
+    max_retries: int,
+    timeout: int,
+    mock_judge: bool,
+    limit: int | None = None,
+) -> tuple[int, int]:
+    selected_rows = rows[:limit] if limit is not None else rows
+    run_started = datetime.now(timezone.utc).isoformat()
+    valid_count = 0
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as handle:
+        for row in selected_rows:
+            result = evaluate_row(row, provider, model, max_retries, timeout, mock_judge)
+            result["run_metadata"] = {
+                "run_started_at": run_started,
+                "input_file": str(dataset_path),
+                "provider": "mock" if mock_judge else provider,
+                "temperature": 0,
+                "max_retries": max_retries,
+            }
+            if result["status"] == "valid":
+                valid_count += 1
+            handle.write(json.dumps(result, ensure_ascii=False))
+            handle.write("\n")
+            handle.flush()
+            print(f"{row['id']}: {result['status']}", flush=True)
+    return len(selected_rows), valid_count
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=Path, default=DEFAULT_DATASET_PATH)
@@ -532,9 +569,10 @@ def main() -> int:
         return 0
 
     if args.run_judge:
-        results = evaluate_rows(
+        total_count, valid_count = evaluate_rows_to_jsonl(
             rows=rows,
             dataset_path=args.dataset,
+            output_path=args.output_results,
             provider=args.provider,
             model=model,
             max_retries=args.max_retries,
@@ -542,12 +580,10 @@ def main() -> int:
             mock_judge=args.mock_judge,
             limit=args.limit,
         )
-        write_jsonl(results, args.output_results)
-        valid_count = sum(1 for result in results if result["status"] == "valid")
-        print(f"wrote {len(results)} judge results to {args.output_results}")
+        print(f"wrote {total_count} judge results to {args.output_results}")
         print(f"valid: {valid_count}")
-        print(f"invalid: {len(results) - valid_count}")
-        return 0 if valid_count == len(results) else 1
+        print(f"invalid: {total_count - valid_count}")
+        return 0 if valid_count == total_count else 1
 
     print(f"built {len(records)} judge prompts with {PROMPT_VERSION}")
     print("use --write-prompts to write eval/judge_prompts.jsonl")
