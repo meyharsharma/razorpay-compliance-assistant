@@ -1,0 +1,165 @@
+{
+  "metadata": {
+    "source_doc_version": "razorpay_terms_2026_01_01",
+    "source_url": "https://razorpay.com/terms/",
+    "effective_date": "2026-01-01",
+    "purpose": "Answerability rules for classifying Razorpay ToS Q&A examples",
+    "created_for_plan_step": "Define Answerability Rules"
+  },
+  "categories": [
+    {
+      "category": "clear_answer",
+      "label": "Clear answer",
+      "rule": "One or more clauses directly resolve the user's question.",
+      "required_conditions": [
+        "The cited clause text states the controlling rule, permission, prohibition, duty, timeline, fee treatment, or consequence.",
+        "No omitted factual condition from the cited clause changes the outcome.",
+        "The response can answer directly and confidently from the ToS alone."
+      ],
+      "response_requirements": [
+        "Give a direct answer first.",
+        "Cite one or more clauses that resolve the question.",
+        "Do not ask a clarifying question unless the question introduces a separate unresolved factual condition."
+      ],
+      "dataset_requirements": {
+        "needs_clarification": false,
+        "required_fields": [
+          "assistant_response",
+          "citations",
+          "legal_issue_tags",
+          "product_tags",
+          "confidence"
+        ],
+        "empty_or_null_fields": [
+          "clarifying_question",
+          "why_clarification_matters",
+          "ambiguity_reason",
+          "recommended_next_step"
+        ],
+        "missing_facts": []
+      },
+      "positive_signals": [
+        "The clause contains an express yes/no answer.",
+        "The clause states a concrete deadline, timeline, liability allocation, or payment rule.",
+        "The clause contains an express list that includes or excludes the scenario in the user question."
+      ],
+      "negative_signals": [
+        "The cited clause only applies if a condition is true and the user did not supply that condition.",
+        "The ToS points to external law, Facility Provider rules, pricing terms, policies, or separate agreements for the decisive answer.",
+        "The clause gives Razorpay broad discretion without stating an operational limit."
+      ]
+    },
+    {
+      "category": "clarification_required",
+      "label": "Clarification required",
+      "rule": "The answer depends on a missing factual condition found in the clause.",
+      "required_conditions": [
+        "The ToS contains a conditional rule that would answer the question if the missing fact were known.",
+        "The omitted fact appears in, or is directly implied by, the cited clause text.",
+        "Different answers are possible depending on that missing fact."
+      ],
+      "response_requirements": [
+        "Ask one specific targeted clarifying question.",
+        "Explain why the missing fact changes the ToS answer.",
+        "Avoid broad requests such as 'can you provide more details?'"
+      ],
+      "dataset_requirements": {
+        "needs_clarification": true,
+        "required_fields": [
+          "clarifying_question",
+          "why_clarification_matters",
+          "missing_facts",
+          "assistant_response",
+          "citations",
+          "legal_issue_tags",
+          "product_tags",
+          "confidence"
+        ],
+        "empty_or_null_fields": [
+          "ambiguity_reason",
+          "recommended_next_step"
+        ]
+      },
+      "positive_signals": [
+        "The clause uses conditional language such as if, when, where, subject to, unless, provided that, after, before, or only if.",
+        "The user question omits transaction type, product type, merchant status, dispute stage, document status, consent status, fund location, or approval status.",
+        "The assistant can name the exact missing fact that determines which ToS rule applies."
+      ],
+      "negative_signals": [
+        "The missing fact is not tied to a condition in the ToS.",
+        "The ToS remains silent or discretionary even after the missing fact is supplied.",
+        "The assistant would need external law or Razorpay-specific operational policy to answer."
+      ]
+    },
+    {
+      "category": "genuine_ambiguity",
+      "label": "Genuine ambiguity",
+      "rule": "The ToS is silent, vague, discretionary, or punts to external law.",
+      "required_conditions": [
+        "The ToS does not fully resolve the precise question from the user.",
+        "The unresolved point cannot be fixed by asking for a single missing fact that appears in the cited clause.",
+        "The remaining uncertainty comes from silence, vague terms, Razorpay discretion, external regulation, Facility Provider rules, separate pricing terms, policies, or other documents outside the dataset."
+      ],
+      "response_requirements": [
+        "State that the ToS does not fully answer the question.",
+        "Explain what the ToS does say.",
+        "Identify what remains unknown.",
+        "Recommend a next step such as legal review, checking RBI/NPCI rules, reviewing pricing terms, or asking Razorpay."
+      ],
+      "dataset_requirements": {
+        "needs_clarification": false,
+        "required_fields": [
+          "ambiguity_reason",
+          "recommended_next_step",
+          "assistant_response",
+          "citations",
+          "legal_issue_tags",
+          "product_tags",
+          "confidence"
+        ],
+        "empty_or_null_fields": [
+          "clarifying_question",
+          "why_clarification_matters"
+        ]
+      },
+      "allowed_ambiguity_reasons": [
+        "tos_silent",
+        "undefined_term",
+        "external_regulation",
+        "razorpay_discretion",
+        "facility_provider_discretion",
+        "separate_terms_or_policy",
+        "jurisdiction_dependent"
+      ],
+      "positive_signals": [
+        "The ToS gives Razorpay discretion without a concrete limit or deadline.",
+        "The answer depends on RBI, NPCI, Facility Provider, card-network, tax, gaming, privacy, FEMA, or other external rules not reproduced in the ToS.",
+        "The question asks for operational details, exact pricing, thresholds, approval standards, or legal classifications the ToS does not define."
+      ],
+      "negative_signals": [
+        "A cited clause directly answers the question.",
+        "A single missing factual condition from a cited clause would determine the answer.",
+        "The uncertainty comes from a vague user question rather than a limitation in the ToS."
+      ]
+    }
+  ],
+  "classification_order": [
+    {
+      "step": 1,
+      "instruction": "If one or more clauses directly resolve the question without a missing clause condition, classify as clear_answer."
+    },
+    {
+      "step": 2,
+      "instruction": "If a cited clause contains a condition and the user omitted that condition, classify as clarification_required."
+    },
+    {
+      "step": 3,
+      "instruction": "If the ToS remains silent, vague, discretionary, or dependent on external law or separate documents, classify as genuine_ambiguity."
+    }
+  ],
+  "global_requirements": [
+    "Every generated example must cite at least one clause from the normalized ToS.",
+    "Every classification must be supported by the cited clause text or by the ToS limitation identified in the ambiguity reason.",
+    "Do not use external legal research to convert a genuine_ambiguity example into a clear_answer example unless the external source is explicitly added to the dataset scope."
+  ]
+}
