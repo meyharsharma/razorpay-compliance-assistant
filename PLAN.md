@@ -371,9 +371,10 @@ The script should:
 - Build judge prompts using a versioned rubric
 - Call the LLM judge with temperature 0
 - Parse strict JSON responses
+- Retry malformed judge responses according to `--max-retries`, then mark the row `invalid` if the output still cannot be parsed or validated
 - Record model ID, prompt version, input file, timestamp, and run configuration
 - Write detailed per-example results to `eval/judge_results.jsonl`
-- Write aggregate findings to `eval/eval_summary.md`
+- Write aggregate findings to `eval/eval_summary.md` in the eval summary milestone
 
 Deterministic preflight checks should include:
 

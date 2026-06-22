@@ -151,6 +151,18 @@ Inspect a single prompt:
 python3 -B scripts/evaluate_dataset.py --print-prompt-id rq-clear-answer-001
 ```
 
+Run the LLM judge and write detailed per-row results to `eval/judge_results.jsonl`:
+
+```bash
+OPENAI_API_KEY=... python3 -B scripts/evaluate_dataset.py --run-judge --model gpt-4.1-mini
+```
+
+The evaluator retries malformed judge output once by default. Change that with `--max-retries`, or use `--mock-judge` for local plumbing checks without calling a model:
+
+```bash
+python3 -B scripts/evaluate_dataset.py --run-judge --mock-judge --limit 3 --output-results /tmp/judge_results.jsonl
+```
+
 Current validation results:
 
 ```text
@@ -185,6 +197,10 @@ Generated Q&A dataset. Each line is one JSON object with the question, ideal ass
 `eval/judge_prompts.jsonl`
 
 Optional prompt artifact produced by `scripts/evaluate_dataset.py --write-prompts`. Each line contains a row id, prompt version, and the full prompt payload for one judge evaluation.
+
+`eval/judge_results.jsonl`
+
+Detailed judge output produced by `scripts/evaluate_dataset.py --run-judge`. Each line contains the row id, valid/invalid status, prompt version, model id, attempt count, parsed judge response when valid, and errors plus attempt history when invalid.
 
 ## Scoring Dimensions
 
