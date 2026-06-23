@@ -20,6 +20,7 @@ from validate_dataset import CRITICAL_FAILURES, SCORING_DIMENSIONS, load_jsonl, 
 DEFAULT_DATASET_PATH = Path("data/synthetic_qa.jsonl")
 DEFAULT_PROMPTS_PATH = Path("eval/judge_prompts.jsonl")
 DEFAULT_RESULTS_PATH = Path("eval/judge_results.jsonl")
+DEFAULT_ENV_PATH = Path(".env")
 DEFAULT_OPENAI_MODEL = "gpt-4.1-mini"
 DEFAULT_OPENROUTER_MODEL = "openai/gpt-oss-120b:free"
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
@@ -94,6 +95,22 @@ JUDGE_OUTPUT_TEMPLATE = {
     "critical_failures": [],
     "notes": "The response directly answers the question and the cited clause supports it.",
 }
+
+
+def load_env_file(path: Path = DEFAULT_ENV_PATH) -> None:
+    if not path.exists():
+        return
+
+    with path.open(encoding="utf-8") as handle:
+        for line in handle:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#") or "=" not in stripped:
+                continue
+            key, value = stripped.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key and key not in os.environ:
+                os.environ[key] = value
 
 
 def cited_clause_payload(row: dict[str, Any]) -> list[dict[str, Any]]:
@@ -543,6 +560,7 @@ def main() -> int:
     parser.add_argument("--timeout", type=int, default=120)
     parser.add_argument("--limit", type=int)
     args = parser.parse_args()
+    load_env_file()
     model = args.model or (
         DEFAULT_OPENROUTER_MODEL if args.provider == "openrouter" else DEFAULT_OPENAI_MODEL
     )
